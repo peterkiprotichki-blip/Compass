@@ -41,9 +41,9 @@ import { AuthService } from '../../../core/services/auth.service';
                 {{ auth.currentUser()?.savedPaths?.length }}
               </span>
             </a>
-            <a routerLink="/admin" routerLinkActive="text-gold" class="hover:text-gold transition-colors flex items-center gap-1.5 text-gold font-semibold">
+            <a *ngIf="auth.isSuperAdmin()" routerLink="/admin" routerLinkActive="text-gold" class="hover:text-gold transition-colors flex items-center gap-1.5 text-gold font-semibold">
               <span>Admin</span>
-              <span class="text-[10px] px-1.5 py-0.2 rounded bg-gold/20 border border-gold/40">2FA</span>
+              <span class="text-[10px] px-1.5 py-0.2 rounded bg-gold/20 border border-gold/40">Portal</span>
             </a>
           </div>
 
@@ -106,6 +106,9 @@ import { AuthService } from '../../../core/services/auth.service';
         </a>
         <a (click)="mobileMenuOpen = false" routerLink="/profile" class="block text-ivory hover:text-gold py-2 font-medium">
           {{ lang.t.navDashboard }}
+        </a>
+        <a *ngIf="auth.isSuperAdmin()" (click)="mobileMenuOpen = false" routerLink="/admin" class="block text-gold hover:underline py-2 font-medium">
+          Admin Portal
         </a>
         <div class="pt-2">
           <a

@@ -152,12 +152,6 @@ type AdminTab = 'OVERVIEW' | 'APPLICATIONS' | 'APPLICANTS' | 'JOURNEYS' | 'GROWT
               <span>{{ isSubmitting ? 'Authenticating...' : 'Continue to Verification' }}</span>
               <span>→</span>
             </button>
-
-            <!-- Quick Seed Info Box -->
-            <div class="bg-ivory p-3 rounded-card border border-forest-line/10 text-[11px] text-charcoal/70 space-y-1">
-              <p class="font-bold text-forest">Seeded Default Credentials:</p>
-              <p class="font-mono">admin&#64;compass.africa / AdminCompass2026!</p>
-            </div>
           </form>
 
           <!-- STEP 2: 2FA OTP VERIFICATION -->
@@ -812,8 +806,8 @@ export class AdminPortalComponent implements OnInit {
   router = inject(Router);
 
   // Authentication & 2FA State
-  loginEmail = 'admin@compass.africa';
-  loginPassword = 'AdminCompass2026!';
+  loginEmail = '';
+  loginPassword = '';
   selectedChannel: 'email' | 'sms' = 'email';
   isSubmitting = false;
   loginError = '';

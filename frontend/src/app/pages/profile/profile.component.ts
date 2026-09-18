@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ApiService } from '../../core/services/api.service';
 import { LanguageService } from '../../core/services/language.service';
@@ -31,6 +31,14 @@ import { Journey, Business } from '../../models/compass.models';
         </div>
 
         <div class="flex items-center gap-3">
+          <a
+            *ngIf="auth.isSuperAdmin()"
+            routerLink="/admin"
+            class="bg-gold hover:bg-gold-soft text-charcoal text-xs font-semibold px-4 py-2 rounded-button shadow transition-colors flex items-center gap-1.5"
+          >
+            <span>Admin Portal</span>
+            <span>→</span>
+          </a>
           <button
             *ngIf="auth.currentUser()"
             (click)="auth.logout()"
@@ -172,7 +180,7 @@ import { Journey, Business } from '../../models/compass.models';
 export class ProfileComponent implements OnInit {
   auth = inject(AuthService);
   api = inject(ApiService);
-  lang = inject(LanguageService);
+  router = inject(Router);
 
   journeys: Journey[] = [];
   savedBusinesses: Business[] = [];
@@ -220,7 +228,12 @@ export class ProfileComponent implements OnInit {
       });
     } else {
       this.auth.login(this.authForm.email, this.authForm.password).subscribe({
-        next: () => {
+        next: (res) => {
+          if (res?.requires2FA) {
+            this.showAuthModal = false;
+            this.router.navigate(['/admin']);
+            return;
+          }
           this.showAuthModal = false;
           this.loadUserData();
         },
