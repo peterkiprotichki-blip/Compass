@@ -1,0 +1,16 @@
+{
+  "name": "compass-backend",
+  "version": 2,
+  "buildCommand": "npm run build",
+  "functions": {
+    "api/index.js": {
+      "memory": 1024,
+      "maxDuration": 30,
+      "includeFiles": "dist/**"
+    }
+  },
+  "rewrites": [
+    { "source": "/api/db-test", "destination": "/api/db-test" },
+    { "source": "/api/(.*)", "destination": "/api/index" }
+  ]
+}

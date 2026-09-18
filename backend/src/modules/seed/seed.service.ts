@@ -16,6 +16,9 @@ export class SeedService implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap() {
+    if (process.env.VERCEL) {
+      return; // Database already seeded in Atlas
+    }
     try {
       await this.seedBusinesses();
       await this.seedSuperAdmin();
@@ -42,35 +45,52 @@ export class SeedService implements OnApplicationBootstrap {
   }
 
   async seedSuperAdmin(): Promise<{ message: string }> {
-    const adminEmail = 'admin@compass.africa';
-    const existingAdmin = await this.userModel.findOne({ email: adminEmail }).exec();
-
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash('AdminCompass2026!', salt);
 
-    if (!existingAdmin) {
-      const superAdmin = new this.userModel({
-        email: adminEmail,
-        passwordHash,
+    const admins = [
+      {
+        email: 'peterkiprotichki@gmail.com',
+        name: 'Peter Kiprotich',
+        role: 'super_admin',
+        phone: '+254700000000',
+        country: 'Kenya',
+        language: 'en',
+      },
+      {
+        email: 'admin@compass.africa',
         name: 'Compass Super Admin',
         role: 'super_admin',
         phone: '+254700000000',
         country: 'Kenya',
         language: 'en',
-        authProvider: 'local',
-        twoFactorChannel: 'email',
-      });
-      await superAdmin.save();
-      this.logger.log(`Super Admin created: ${adminEmail} (Role: super_admin)`);
-      return { message: 'Super Admin successfully created' };
-    } else {
-      // Ensure super_admin role and valid password
-      existingAdmin.role = 'super_admin';
-      existingAdmin.passwordHash = passwordHash;
-      if (!existingAdmin.phone) existingAdmin.phone = '+254700000000';
-      await existingAdmin.save();
-      this.logger.log(`Super Admin verified: ${adminEmail} (Role: super_admin)`);
-      return { message: 'Super Admin already exists and verified' };
+      },
+    ];
+
+    for (const adm of admins) {
+      const existing = await this.userModel.findOne({ email: adm.email }).exec();
+      if (!existing) {
+        const superAdmin = new this.userModel({
+          email: adm.email,
+          passwordHash,
+          name: adm.name,
+          role: 'super_admin',
+          phone: adm.phone,
+          country: adm.country,
+          language: adm.language,
+          authProvider: 'local',
+          twoFactorChannel: 'email',
+        });
+        await superAdmin.save();
+        this.logger.log(`Super Admin created: ${adm.email} (Role: super_admin)`);
+      } else {
+        existing.role = 'super_admin';
+        existing.passwordHash = passwordHash;
+        if (!existing.phone) existing.phone = adm.phone;
+        await existing.save();
+        this.logger.log(`Super Admin verified: ${adm.email} (Role: super_admin)`);
+      }
     }
+    return { message: 'Super Admins successfully verified and seeded' };
   }
 }

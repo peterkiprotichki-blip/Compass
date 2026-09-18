@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './modules/auth/auth.module';
 import { BusinessesModule } from './modules/businesses/businesses.module';
@@ -12,16 +11,14 @@ import { AdminModule } from './modules/admin/admin.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
+const DEFAULT_MONGODB_URI =
+  'mongodb+srv://peterkiprotichki_db_user:FyONfVf7VlHKuPuK@cluster0.hbo4kvh.mongodb.net/compass?retryWrites=true&w=majority&appName=Cluster0';
+
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
     MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGODB_URI') || 'mongodb://127.0.0.1:27017/compass',
+      useFactory: () => ({
+        uri: process.env.MONGODB_URI || DEFAULT_MONGODB_URI,
         serverSelectionTimeoutMS: 5000,
       }),
     }),

@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { GoogleGenAI } from '@google/genai';
 
 export interface AiRecommendationInsight {
@@ -15,8 +14,8 @@ export class GeminiService {
   private aiClient: GoogleGenAI | null = null;
   private readonly modelName = 'gemini-3.6-flash';
 
-  constructor(private readonly configService: ConfigService) {
-    const apiKey = this.configService.get<string>('GEMINI_API_KEY') || process.env.GEMINI_API_KEY;
+  constructor() {
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY;
     if (apiKey) {
       try {
         this.aiClient = new GoogleGenAI({ apiKey });

@@ -8,7 +8,9 @@ import { UserProfile } from '../../models/compass.models';
 })
 export class AuthService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:3000/api/auth';
+  private baseUrl = typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+    ? '/api/auth'
+    : 'http://localhost:3000/api/auth';
   private readonly userStorageKey = 'compass_user';
   private readonly tokenStorageKey = 'compass_token';
   private readonly guestIdKey = 'compass_guest_id';

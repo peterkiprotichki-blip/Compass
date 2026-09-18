@@ -1,0 +1,11 @@
+{
+  "name": "compass",
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/frontend/browser",
+  "routes": [
+    { "src": "/api/(.*)", "dest": "https://compass-backend-mu.vercel.app/api/$1" },
+    { "handle": "filesystem" },
+    { "src": "/.*", "dest": "/index.html" }
+  ]
+}
