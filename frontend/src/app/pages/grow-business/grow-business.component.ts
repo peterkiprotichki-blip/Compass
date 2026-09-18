@@ -16,7 +16,7 @@ import { AuthService } from '../../core/services/auth.service';
       <!-- Header -->
       <div class="text-center space-y-3">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-pill bg-forest text-gold text-xs font-semibold uppercase">
-          <span>Business Compass · v1 Intake</span>
+          <span>{{ lang.isSwahili() ? 'Dira ya Biashara · Tathmini ya Awali' : 'Business Compass · v1 Intake' }}</span>
         </div>
         <h1 class="text-3xl sm:text-4xl font-serif font-bold text-charcoal">
           {{ lang.isSwahili() ? 'Kukuza Biashara Yako Inayofanya Kazi' : 'Diagnose and Scale Your Business' }}
@@ -37,13 +37,13 @@ import { AuthService } from '../../core/services/auth.service';
           <!-- Field 1: Business Type -->
           <div class="space-y-2">
             <label class="block text-xs font-semibold uppercase tracking-wider text-charcoal">
-              1. What type of business are you operating?
+              {{ lang.isSwahili() ? '1. Unaendesha biashara ya aina gani?' : '1. What type of business are you operating?' }}
             </label>
             <input
               type="text"
               [(ngModel)]="formData.businessType"
               name="businessType"
-              placeholder="e.g. Mitumba shop, Fast food kiosk, Salon, Agribusiness"
+              [placeholder]="lang.isSwahili() ? 'mfano: Duka la Mitumba, Kibanda cha Chakula, Saluni, Kilimo-Biashara' : 'e.g. Mitumba shop, Fast food kiosk, Salon, Agribusiness'"
               class="w-full p-3.5 rounded-button border border-forest-line/20 bg-ivory text-charcoal text-sm focus:outline-none focus:border-gold"
               required
             />
@@ -52,7 +52,7 @@ import { AuthService } from '../../core/services/auth.service';
           <!-- Field 2: Operating Duration -->
           <div class="space-y-2">
             <label class="block text-xs font-semibold uppercase tracking-wider text-charcoal">
-              2. How long have you been operating?
+              {{ lang.isSwahili() ? '2. Umekuwa ukiendesha biashara hii kwa muda gani?' : '2. How long have you been operating?' }}
             </label>
             <select
               [(ngModel)]="formData.operatingDuration"
@@ -60,18 +60,18 @@ import { AuthService } from '../../core/services/auth.service';
               class="w-full p-3.5 rounded-button border border-forest-line/20 bg-ivory text-charcoal text-sm focus:outline-none focus:border-gold"
               required
             >
-              <option value="" disabled selected>Select operating age</option>
-              <option value="Less than 6 months">Less than 6 months</option>
-              <option value="6 to 12 months">6 to 12 months</option>
-              <option value="1 to 3 years">1 to 3 years</option>
-              <option value="More than 3 years">More than 3 years</option>
+              <option value="" disabled selected>{{ lang.isSwahili() ? 'Chagua muda wa uendeshaji' : 'Select operating age' }}</option>
+              <option value="Less than 6 months">{{ lang.isSwahili() ? 'Chini ya miezi 6' : 'Less than 6 months' }}</option>
+              <option value="6 to 12 months">{{ lang.isSwahili() ? 'Miezi 6 hadi 12' : '6 to 12 months' }}</option>
+              <option value="1 to 3 years">{{ lang.isSwahili() ? 'Mwaka 1 hadi miaka 3' : '1 to 3 years' }}</option>
+              <option value="More than 3 years">{{ lang.isSwahili() ? 'Zaidi ya miaka 3' : 'More than 3 years' }}</option>
             </select>
           </div>
 
           <!-- Field 3: Monthly Sales -->
           <div class="space-y-2">
             <label class="block text-xs font-semibold uppercase tracking-wider text-charcoal">
-              3. Estimated average monthly revenue
+              {{ lang.isSwahili() ? '3. Makadirio ya wastani wa mapato kwa mwezi' : '3. Estimated average monthly revenue' }}
             </label>
             <select
               [(ngModel)]="formData.monthlySalesRange"
@@ -79,18 +79,18 @@ import { AuthService } from '../../core/services/auth.service';
               class="w-full p-3.5 rounded-button border border-forest-line/20 bg-ivory text-charcoal text-sm focus:outline-none focus:border-gold"
               required
             >
-              <option value="" disabled selected>Select revenue range</option>
-              <option value="Under KES 50,000">Under KES 50,000</option>
+              <option value="" disabled selected>{{ lang.isSwahili() ? 'Chagua makadirio ya mapato' : 'Select revenue range' }}</option>
+              <option value="Under KES 50,000">{{ lang.isSwahili() ? 'Chini ya KES 50,000' : 'Under KES 50,000' }}</option>
               <option value="KES 50,000 – 200,000">KES 50,000 – 200,000</option>
               <option value="KES 200,000 – 500,000">KES 200,000 – 500,000</option>
-              <option value="Above KES 500,000">Above KES 500,000</option>
+              <option value="Above KES 500,000">{{ lang.isSwahili() ? 'Zaidi ya KES 500,000' : 'Above KES 500,000' }}</option>
             </select>
           </div>
 
           <!-- Field 4: Biggest Challenge -->
           <div class="space-y-2">
             <label class="block text-xs font-semibold uppercase tracking-wider text-charcoal">
-              4. What is your single biggest current bottleneck?
+              {{ lang.isSwahili() ? '4. Ni kikwazo gani kikuu kinachokukabili kwa sasa?' : '4. What is your single biggest current bottleneck?' }}
             </label>
             <select
               [(ngModel)]="formData.biggestChallenge"
@@ -98,12 +98,12 @@ import { AuthService } from '../../core/services/auth.service';
               class="w-full p-3.5 rounded-button border border-forest-line/20 bg-ivory text-charcoal text-sm focus:outline-none focus:border-gold"
               required
             >
-              <option value="" disabled selected>Select primary hurdle</option>
-              <option value="Customer acquisition & slow sales">Customer acquisition & slow sales</option>
-              <option value="Cash flow & customer credit debt (deni)">Cash flow & customer credit debt (deni)</option>
-              <option value="Lack of working capital for inventory">Lack of working capital for inventory</option>
-              <option value="Staff reliability & daily operations">Staff reliability & daily operations</option>
-              <option value="High costs & thin profit margins">High costs & thin profit margins</option>
+              <option value="" disabled selected>{{ lang.isSwahili() ? 'Chagua kikwazo kikuu' : 'Select primary hurdle' }}</option>
+              <option value="Customer acquisition & slow sales">{{ lang.isSwahili() ? 'Kupata wateja na mauzo duni' : 'Customer acquisition & slow sales' }}</option>
+              <option value="Cash flow & customer credit debt (deni)">{{ lang.isSwahili() ? 'Mtiririko wa fedha na madeni ya wateja (deni)' : 'Cash flow & customer credit debt (deni)' }}</option>
+              <option value="Lack of working capital for inventory">{{ lang.isSwahili() ? 'Ukosefu wa mtaji wa kuongeza bidhaa / mzigo' : 'Lack of working capital for inventory' }}</option>
+              <option value="Staff reliability & daily operations">{{ lang.isSwahili() ? 'Uaminifu wa wafanyakazi na uendeshaji wa kila siku' : 'Staff reliability & daily operations' }}</option>
+              <option value="High costs & thin profit margins">{{ lang.isSwahili() ? 'Gharama kubwa na faida finyu' : 'High costs & thin profit margins' }}</option>
             </select>
           </div>
 
@@ -114,7 +114,7 @@ import { AuthService } from '../../core/services/auth.service';
               [disabled]="!isFormValid()"
               class="w-full bg-gold hover:bg-gold-soft disabled:opacity-40 text-charcoal font-semibold text-sm py-4 rounded-button shadow transition-all"
             >
-              Generate Business Diagnostics →
+              {{ lang.isSwahili() ? 'Tengeneza Tathmini ya Biashara →' : 'Generate Business Diagnostics →' }}
             </button>
           </div>
 
@@ -130,26 +130,32 @@ import { AuthService } from '../../core/services/auth.service';
             ✓
           </div>
           <div>
-            <span class="text-xs font-semibold text-gold uppercase tracking-wider">Diagnostic Analysis Complete</span>
+            <span class="text-xs font-semibold text-gold uppercase tracking-wider">
+              {{ lang.isSwahili() ? 'Uchambuzi wa Biashara Umekamilika' : 'Diagnostic Analysis Complete' }}
+            </span>
             <h2 class="text-2xl font-serif font-bold text-charcoal">
-              {{ diagnosticResult.diagnostics.verdict }}
+              {{ lang.isSwahili() ? (diagnosticResult.diagnostics.verdictSw || diagnosticResult.diagnostics.verdict) : diagnosticResult.diagnostics.verdict }}
             </h2>
           </div>
         </div>
 
         <!-- Priority Focus Area -->
         <div class="p-5 bg-forest-deep text-ivory rounded-card border border-forest-line space-y-2">
-          <span class="text-[10px] text-gold uppercase font-bold tracking-widest">Recommended Primary Focus</span>
-          <p class="text-xl font-serif font-bold text-ivory">{{ diagnosticResult.diagnostics.focusArea }}</p>
+          <span class="text-[10px] text-gold uppercase font-bold tracking-widest">
+            {{ lang.isSwahili() ? 'Eneo Kuu Lililopendekezwa Kuzingatiwa' : 'Recommended Primary Focus' }}
+          </span>
+          <p class="text-xl font-serif font-bold text-ivory">
+            {{ lang.isSwahili() ? (diagnosticResult.diagnostics.focusAreaSw || diagnosticResult.diagnostics.focusArea) : diagnosticResult.diagnostics.focusArea }}
+          </p>
         </div>
 
         <!-- Actionable Recommendations -->
         <div class="space-y-3">
           <h3 class="text-sm font-bold uppercase tracking-wider text-charcoal">
-            Immediate Recommended Interventions:
+            {{ lang.isSwahili() ? 'Hatua za Haraka Zinazopendekezwa:' : 'Immediate Recommended Interventions:' }}
           </h3>
           <ul class="space-y-2.5 text-xs text-charcoal/80">
-            <li *ngFor="let rec of diagnosticResult.diagnostics.recommendations" class="flex items-start gap-2.5 p-3 rounded-button bg-ivory border border-forest-line/10">
+            <li *ngFor="let rec of (lang.isSwahili() && diagnosticResult.diagnostics.recommendationsSw ? diagnosticResult.diagnostics.recommendationsSw : diagnosticResult.diagnostics.recommendations)" class="flex items-start gap-2.5 p-3 rounded-button bg-ivory border border-forest-line/10">
               <span class="text-forest font-bold">👉</span>
               <span>{{ rec }}</span>
             </li>
@@ -158,9 +164,11 @@ import { AuthService } from '../../core/services/auth.service';
 
         <!-- Concrete First Step -->
         <div class="p-5 bg-ivory border-l-4 border-gold rounded-r-card space-y-1">
-          <span class="text-xs font-bold text-charcoal uppercase">Next Step for Monday Morning:</span>
+          <span class="text-xs font-bold text-charcoal uppercase">
+            {{ lang.isSwahili() ? 'Hatua ya Kwanza ya Jumatatu Asubuhi:' : 'Next Step for Monday Morning:' }}
+          </span>
           <p class="text-sm font-medium text-forest">
-            {{ diagnosticResult.diagnostics.concreteFirstStep }}
+            {{ lang.isSwahili() ? (diagnosticResult.diagnostics.concreteFirstStepSw || diagnosticResult.diagnostics.concreteFirstStep) : diagnosticResult.diagnostics.concreteFirstStep }}
           </p>
         </div>
 
@@ -170,7 +178,7 @@ import { AuthService } from '../../core/services/auth.service';
             (click)="diagnosticResult = null"
             class="text-xs font-semibold text-charcoal/70 hover:text-charcoal"
           >
-            ← Retake Diagnostic
+            {{ lang.isSwahili() ? '← Rudia Tathmini' : '← Retake Diagnostic' }}
           </button>
 
           <div class="flex items-center gap-3">
@@ -178,13 +186,13 @@ import { AuthService } from '../../core/services/auth.service';
               routerLink="/learn"
               class="px-5 py-2.5 rounded-button border border-forest-line/20 hover:border-gold text-xs font-semibold text-charcoal"
             >
-              Explore Growth Guides
+              {{ lang.isSwahili() ? 'Gundua Miongozo ya Ukuaji' : 'Explore Growth Guides' }}
             </a>
             <a
               routerLink="/"
               class="bg-forest text-ivory hover:bg-forest-deep px-6 py-2.5 rounded-button text-xs font-semibold shadow"
             >
-              Return Home
+              {{ lang.isSwahili() ? 'Rudi Nyumbani' : 'Return Home' }}
             </a>
           </div>
         </div>

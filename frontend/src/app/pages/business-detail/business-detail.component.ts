@@ -17,7 +17,7 @@ import { WeekBlockComponent } from '../../shared/components/week-block/week-bloc
       <!-- Back Navigation -->
       <div>
         <button (click)="goBack()" class="inline-flex items-center gap-1.5 text-xs font-semibold text-charcoal/70 hover:text-charcoal transition-colors">
-          ← Back to Results
+          {{ lang.isSwahili() ? '← Rudi kwenye Matokeo' : '← Back to Results' }}
         </button>
       </div>
 
@@ -30,7 +30,7 @@ import { WeekBlockComponent } from '../../shared/components/week-block/week-bloc
           <div class="lg:col-span-8 space-y-4">
             <div class="flex items-center gap-2">
               <span class="text-xs font-semibold uppercase tracking-widest text-gold">
-                {{ lang.isSwahili() ? business.categorySw : business.category }}
+                {{ lang.isSwahili() ? (business.categorySw || business.category) : business.category }}
               </span>
               <span class="text-xs px-2.5 py-0.5 rounded-pill font-medium"
                 [ngClass]="{
@@ -38,21 +38,21 @@ import { WeekBlockComponent } from '../../shared/components/week-block/week-bloc
                   'bg-amber-500/20 text-amber-300 border border-amber-500/30': business.riskLevel === 'Medium',
                   'bg-rose-500/20 text-rose-300 border border-rose-500/30': business.riskLevel === 'High'
                 }">
-                {{ business.riskLevel }} Risk
+                {{ business.riskLevel === 'Low' ? (lang.isSwahili() ? 'Hatari Ndogo' : 'Low Risk') : (business.riskLevel === 'Medium' ? (lang.isSwahili() ? 'Hatari ya Wastani' : 'Medium Risk') : (lang.isSwahili() ? 'Hatari Kubwa' : 'High Risk')) }}
               </span>
             </div>
 
             <h1 class="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-ivory">
-              {{ lang.isSwahili() ? business.nameSw : business.name }}
+              {{ lang.isSwahili() ? (business.nameSw || business.name) : business.name }}
             </h1>
 
             <p class="text-sm text-ivory/80 leading-relaxed max-w-2xl">
-              {{ lang.isSwahili() ? business.descriptionSw : business.description }}
+              {{ lang.isSwahili() ? (business.descriptionSw || business.description) : business.description }}
             </p>
 
             <div class="pt-2 flex flex-wrap gap-2">
               <span *ngFor="let arch of business.bestArchetypes" class="px-3 py-1 rounded-pill bg-forest-deep border border-forest-line text-xs text-gold font-medium">
-                Best For: {{ arch }}
+                {{ lang.isSwahili() ? 'Inamfaa: ' : 'Best For: ' }}{{ arch }}
               </span>
             </div>
           </div>
@@ -60,21 +60,29 @@ import { WeekBlockComponent } from '../../shared/components/week-block/week-bloc
           <!-- Quick Stat Badge Box -->
           <div class="lg:col-span-4 bg-forest-deep p-6 rounded-card border border-forest-line space-y-4">
             <div>
-              <span class="text-[10px] text-ivory/60 uppercase font-semibold tracking-wider block">Capital Required</span>
+              <span class="text-[10px] text-ivory/60 uppercase font-semibold tracking-wider block">
+                {{ lang.isSwahili() ? 'Mtaji Unaohitajika' : 'Capital Required' }}
+              </span>
               <p class="font-serif font-bold text-xl text-gold">
                 KES {{ business.capitalRequiredMin | number }} – {{ business.capitalRequiredMax | number }}
               </p>
             </div>
             <div>
-              <span class="text-[10px] text-ivory/60 uppercase font-semibold tracking-wider block">First Customer Timeline</span>
+              <span class="text-[10px] text-ivory/60 uppercase font-semibold tracking-wider block">
+                {{ lang.isSwahili() ? 'Muda wa Mteja wa Kwanza' : 'First Customer Timeline' }}
+              </span>
               <p class="font-medium text-sm text-ivory">{{ business.firstCustomerTimeline }}</p>
             </div>
             <div>
-              <span class="text-[10px] text-ivory/60 uppercase font-semibold tracking-wider block">Time Commitment</span>
-              <p class="font-medium text-sm text-ivory">{{ business.timeCommitment }} / week</p>
+              <span class="text-[10px] text-ivory/60 uppercase font-semibold tracking-wider block">
+                {{ lang.isSwahili() ? 'Muda kwa Wiki' : 'Time Commitment' }}
+              </span>
+              <p class="font-medium text-sm text-ivory">{{ business.timeCommitment }} / {{ lang.isSwahili() ? 'wiki' : 'week' }}</p>
             </div>
             <div>
-              <span class="text-[10px] text-ivory/60 uppercase font-semibold tracking-wider block">Location Suitability</span>
+              <span class="text-[10px] text-ivory/60 uppercase font-semibold tracking-wider block">
+                {{ lang.isSwahili() ? 'Ufaafu wa Eneo' : 'Location Suitability' }}
+              </span>
               <p class="font-medium text-sm text-ivory">{{ business.locationFit.join(', ') }}</p>
             </div>
           </div>
@@ -90,14 +98,14 @@ import { WeekBlockComponent } from '../../shared/components/week-block/week-bloc
           [class.bg-gold/15]="isSaved"
           [class.text-forest]="isSaved"
         >
-          <span>{{ isSaved ? '✓ Saved to Profile' : '★ Save This Path' }}</span>
+          <span>{{ isSaved ? (lang.isSwahili() ? '✓ Imehifadhiwa kwenye Wasifu' : '✓ Saved to Profile') : (lang.isSwahili() ? '★ Hifadhi Fursa Hii' : '★ Save This Path') }}</span>
         </button>
 
         <button
           (click)="onStartJourney()"
           class="bg-gold hover:bg-gold-soft text-charcoal font-semibold text-xs px-6 py-2.5 rounded-button shadow transition-all flex items-center gap-2"
         >
-          <span>Start My Tracked Journey</span>
+          <span>{{ lang.isSwahili() ? 'Anza Safari ya Utekelezaji' : 'Start My Tracked Journey' }}</span>
           <span>→</span>
         </button>
       </div>
@@ -108,20 +116,26 @@ import { WeekBlockComponent } from '../../shared/components/week-block/week-bloc
         <div class="bg-white rounded-sheet p-6 border border-forest-line/15 shadow-light-sm space-y-4">
           <h3 class="font-serif font-bold text-lg text-charcoal flex items-center gap-2">
             <span>✨</span>
-            <span>Strategic Advantages</span>
+            <span>{{ lang.isSwahili() ? 'Faida Kuu za Kimkakati' : 'Strategic Advantages' }}</span>
           </h3>
           <div class="space-y-3 text-xs text-charcoal/80">
             <div>
-              <strong class="text-charcoal block mb-0.5">Who this is best for:</strong>
+              <strong class="text-charcoal block mb-0.5">
+                {{ lang.isSwahili() ? 'Inamfaa nani zaidi:' : 'Who this is best for:' }}
+              </strong>
               <p>{{ business.whoIsThisBestFor }}</p>
             </div>
             <div>
-              <strong class="text-forest block mb-0.5">Biggest Advantage:</strong>
+              <strong class="text-forest block mb-0.5">
+                {{ lang.isSwahili() ? 'Faida Kubwa Zaidi:' : 'Biggest Advantage:' }}
+              </strong>
               <p>{{ business.biggestAdvantage }}</p>
             </div>
             <div>
-              <strong class="text-charcoal block mb-0.5">Growth Potential:</strong>
-              <p>{{ business.growthPotential }} scalability with high margin potential.</p>
+              <strong class="text-charcoal block mb-0.5">
+                {{ lang.isSwahili() ? 'Uwezo wa Kukuza:' : 'Growth Potential:' }}
+              </strong>
+              <p>{{ business.growthPotential }} {{ lang.isSwahili() ? 'uwezo mkubwa wa kukuza biashara na faida nzuri.' : 'scalability with high margin potential.' }}</p>
             </div>
           </div>
         </div>
@@ -129,19 +143,25 @@ import { WeekBlockComponent } from '../../shared/components/week-block/week-bloc
         <div class="bg-white rounded-sheet p-6 border border-forest-line/15 shadow-light-sm space-y-4">
           <h3 class="font-serif font-bold text-lg text-charcoal flex items-center gap-2">
             <span>🛡️</span>
-            <span>Risk Management</span>
+            <span>{{ lang.isSwahili() ? 'Udhibiti wa Hatari' : 'Risk Management' }}</span>
           </h3>
           <div class="space-y-3 text-xs text-charcoal/80">
             <div>
-              <strong class="text-amber-700 block mb-0.5">Biggest Operational Risk:</strong>
+              <strong class="text-amber-700 block mb-0.5">
+                {{ lang.isSwahili() ? 'Hatari Kuu ya Kiutendaji:' : 'Biggest Operational Risk:' }}
+              </strong>
               <p>{{ business.biggestRisk }}</p>
             </div>
             <div>
-              <strong class="text-charcoal block mb-0.5">Who should avoid this:</strong>
+              <strong class="text-charcoal block mb-0.5">
+                {{ lang.isSwahili() ? 'Nani anapaswa kuepuka:' : 'Who should avoid this:' }}
+              </strong>
               <p>{{ business.whoShouldAvoid }}</p>
             </div>
             <div class="pt-1 border-t border-forest-line/10">
-              <strong class="text-forest block mb-0.5">Your Concrete First Step:</strong>
+              <strong class="text-forest block mb-0.5">
+                {{ lang.isSwahili() ? 'Hatua Yako ya Kwanza Thabiti:' : 'Your Concrete First Step:' }}
+              </strong>
               <p class="font-medium text-charcoal">{{ business.firstStep }}</p>
             </div>
           </div>
@@ -153,29 +173,37 @@ import { WeekBlockComponent } from '../../shared/components/week-block/week-bloc
       <div class="bg-white rounded-sheet p-6 sm:p-8 border border-forest-line/15 shadow-light-sm space-y-6">
         <div class="border-b border-forest-line/10 pb-4">
           <h3 class="text-xl font-serif font-bold text-charcoal">
-            Startup Capital Allocation Breakdown
+            {{ lang.isSwahili() ? 'Mchanganuo wa Mgawanyo wa Mtaji wa Kuanzia' : 'Startup Capital Allocation Breakdown' }}
           </h3>
           <p class="text-xs text-charcoal/60 mt-1">
-            Recommended percentage distribution to avoid running out of operating cash.
+            {{ lang.isSwahili() ? 'Asilimia zilizopendekezwa ili kuepuka kuishiwa na fedha za uendeshaji.' : 'Recommended percentage distribution to avoid running out of operating cash.' }}
           </p>
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
           <div class="p-4 rounded-card bg-ivory border border-forest-line/10">
             <p class="font-serif text-2xl font-bold text-forest">{{ business.capitalSplit.inventory }}%</p>
-            <p class="text-xs font-semibold text-charcoal/70 uppercase tracking-wider mt-1">Stock & Setup</p>
+            <p class="text-xs font-semibold text-charcoal/70 uppercase tracking-wider mt-1">
+              {{ lang.isSwahili() ? 'Bidhaa na Maandalizi' : 'Stock & Setup' }}
+            </p>
           </div>
           <div class="p-4 rounded-card bg-ivory border border-forest-line/10">
             <p class="font-serif text-2xl font-bold text-gold">{{ business.capitalSplit.marketing }}%</p>
-            <p class="text-xs font-semibold text-charcoal/70 uppercase tracking-wider mt-1">Marketing & Launch</p>
+            <p class="text-xs font-semibold text-charcoal/70 uppercase tracking-wider mt-1">
+              {{ lang.isSwahili() ? 'Masoko na Uzinduzi' : 'Marketing & Launch' }}
+            </p>
           </div>
           <div class="p-4 rounded-card bg-ivory border border-forest-line/10">
             <p class="font-serif text-2xl font-bold text-charcoal">{{ business.capitalSplit.operations }}%</p>
-            <p class="text-xs font-semibold text-charcoal/70 uppercase tracking-wider mt-1">Operating Buffer</p>
+            <p class="text-xs font-semibold text-charcoal/70 uppercase tracking-wider mt-1">
+              {{ lang.isSwahili() ? 'Akiba ya Uendeshaji' : 'Operating Buffer' }}
+            </p>
           </div>
           <div class="p-4 rounded-card bg-ivory border border-forest-line/10">
             <p class="font-serif text-2xl font-bold text-emerald-600">{{ business.capitalSplit.emergencyFund }}%</p>
-            <p class="text-xs font-semibold text-charcoal/70 uppercase tracking-wider mt-1">Emergency Reserve</p>
+            <p class="text-xs font-semibold text-charcoal/70 uppercase tracking-wider mt-1">
+              {{ lang.isSwahili() ? 'Mfuko wa Dharura' : 'Emergency Reserve' }}
+            </p>
           </div>
         </div>
       </div>
@@ -184,12 +212,14 @@ import { WeekBlockComponent } from '../../shared/components/week-block/week-bloc
       <div class="space-y-6">
         <div class="flex items-center justify-between">
           <div>
-            <span class="text-xs font-semibold text-gold uppercase tracking-wider">Implementation</span>
+            <span class="text-xs font-semibold text-gold uppercase tracking-wider">
+              {{ lang.isSwahili() ? 'Utekelezaji' : 'Implementation' }}
+            </span>
             <h2 class="text-2xl font-serif font-bold text-charcoal">
-              30-Day Launch Roadmap
+              {{ lang.isSwahili() ? 'Mpango Kazi wa Siku 30' : '30-Day Launch Roadmap' }}
             </h2>
           </div>
-          <span class="text-xs text-charcoal/60">4 Week Blocks</span>
+          <span class="text-xs text-charcoal/60">{{ lang.isSwahili() ? 'Mavungu 4 ya Wiki' : '4 Week Blocks' }}</span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

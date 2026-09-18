@@ -60,15 +60,17 @@ import { Journey, Business } from '../../models/compass.models';
       <div class="space-y-4">
         <div class="flex items-center justify-between">
           <h2 class="text-xl font-serif font-bold text-charcoal">
-            Active 30-Day Journeys
+            {{ lang.isSwahili() ? 'Mipango Kazi ya Siku 30 Inayoendelea' : 'Active 30-Day Journeys' }}
           </h2>
-          <span class="text-xs text-charcoal/60">{{ journeys.length }} active</span>
+          <span class="text-xs text-charcoal/60">{{ journeys.length }} {{ lang.isSwahili() ? 'inayoendelea' : 'active' }}</span>
         </div>
 
         <div *ngIf="journeys.length === 0" class="bg-white p-8 rounded-card border border-forest-line/10 text-center space-y-3">
-          <p class="text-xs text-charcoal/60">You have not started any active business journeys yet.</p>
+          <p class="text-xs text-charcoal/60">
+            {{ lang.isSwahili() ? 'Bado hujaanza safari yoyote ya kuanzisha biashara.' : 'You have not started any active business journeys yet.' }}
+          </p>
           <a routerLink="/pathfinder" class="inline-block text-xs font-semibold text-forest underline">
-            Take Pathfinder Assessment to find matched paths →
+            {{ lang.isSwahili() ? 'Fanya Tathmini ya Pathfinder kugundua biashara →' : 'Take Pathfinder Assessment to find matched paths →' }}
           </a>
         </div>
 
@@ -76,7 +78,9 @@ import { Journey, Business } from '../../models/compass.models';
           <div *ngFor="let j of journeys" class="bg-white p-6 rounded-card border border-forest-line/15 shadow-light-sm space-y-4">
             <div class="flex items-start justify-between">
               <div>
-                <span class="text-[10px] font-semibold uppercase text-gold">30-Day Plan</span>
+                <span class="text-[10px] font-semibold uppercase text-gold">
+                  {{ lang.isSwahili() ? 'Mpango wa Siku 30' : '30-Day Plan' }}
+                </span>
                 <h3 class="font-serif font-bold text-lg text-charcoal">{{ j.businessName }}</h3>
               </div>
               <span class="font-serif font-bold text-base text-forest">{{ j.progressPercentage }}%</span>
@@ -91,7 +95,7 @@ import { Journey, Business } from '../../models/compass.models';
                 [routerLink]="['/journey', j._id]"
                 class="bg-forest hover:bg-forest-deep text-ivory text-xs font-semibold px-4 py-2 rounded-button shadow transition-colors"
               >
-                Open Checklist →
+                {{ lang.isSwahili() ? 'Fungua Orodha ya Kazi →' : 'Open Checklist →' }}
               </a>
             </div>
           </div>
@@ -102,30 +106,36 @@ import { Journey, Business } from '../../models/compass.models';
       <div class="space-y-4">
         <div class="flex items-center justify-between">
           <h2 class="text-xl font-serif font-bold text-charcoal">
-            Saved Business Paths
+            {{ lang.isSwahili() ? 'Fursa za Biashara Zilizohifadhiwa' : 'Saved Business Paths' }}
           </h2>
-          <span class="text-xs text-charcoal/60">{{ savedBusinesses.length }} saved</span>
+          <span class="text-xs text-charcoal/60">{{ savedBusinesses.length }} {{ lang.isSwahili() ? 'zimehifadhiwa' : 'saved' }}</span>
         </div>
 
         <div *ngIf="savedBusinesses.length === 0" class="bg-white p-8 rounded-card border border-forest-line/10 text-center space-y-3">
-          <p class="text-xs text-charcoal/60">No saved paths found.</p>
+          <p class="text-xs text-charcoal/60">
+            {{ lang.isSwahili() ? 'Hakuna fursa zilizohifadhiwa kwa sasa.' : 'No saved paths found.' }}
+          </p>
           <a routerLink="/pathfinder" class="inline-block text-xs font-semibold text-forest underline">
-            Explore and save businesses from Pathfinder →
+            {{ lang.isSwahili() ? 'Gundua na uhifadhi biashara kutoka Pathfinder →' : 'Explore and save businesses from Pathfinder →' }}
           </a>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div *ngFor="let b of savedBusinesses" class="bg-white p-5 rounded-card border border-forest-line/15 shadow-light-sm flex items-center justify-between gap-4">
             <div>
-              <span class="text-[10px] font-bold uppercase text-gold">{{ b.category }}</span>
-              <h4 class="font-serif font-bold text-base text-charcoal">{{ b.name }}</h4>
+              <span class="text-[10px] font-bold uppercase text-gold">
+                {{ lang.isSwahili() ? (b.categorySw || b.category) : b.category }}
+              </span>
+              <h4 class="font-serif font-bold text-base text-charcoal">
+                {{ lang.isSwahili() ? (b.nameSw || b.name) : b.name }}
+              </h4>
               <p class="text-xs text-charcoal/60 mt-0.5">KES {{ b.capitalRequiredMin | number }} – {{ b.capitalRequiredMax | number }}</p>
             </div>
             <a
               [routerLink]="['/business', b.slug]"
               class="text-xs font-semibold px-3 py-1.5 rounded-button border border-forest-line/20 hover:border-gold text-forest"
             >
-              View →
+              {{ lang.isSwahili() ? 'Tazama →' : 'View →' }}
             </a>
           </div>
         </div>
@@ -136,7 +146,7 @@ import { Journey, Business } from '../../models/compass.models';
         <div class="bg-white max-w-md w-full p-8 rounded-sheet shadow-2xl border border-forest-line/20 space-y-6 animate-fadeIn">
           <div class="flex items-center justify-between border-b border-forest-line/10 pb-3">
             <h3 class="font-serif font-bold text-xl text-charcoal">
-              {{ isRegisterMode ? 'Create Account' : 'Welcome Back' }}
+              {{ isRegisterMode ? (lang.isSwahili() ? 'Fungua Akaunti' : 'Create Account') : (lang.isSwahili() ? 'Karibu Tena' : 'Welcome Back') }}
             </h3>
             <button (click)="showAuthModal = false" class="text-charcoal/50 hover:text-charcoal text-lg font-bold">
               ✕
@@ -145,30 +155,39 @@ import { Journey, Business } from '../../models/compass.models';
 
           <form (submit)="onAuthSubmit($event)" class="space-y-4">
             <div *ngIf="isRegisterMode" class="space-y-1">
-              <label class="text-xs font-semibold uppercase text-charcoal">Full Name</label>
+              <label class="text-xs font-semibold uppercase text-charcoal">
+                {{ lang.isSwahili() ? 'Jina Kamili' : 'Full Name' }}
+              </label>
               <input type="text" [(ngModel)]="authForm.name" name="name" class="w-full p-3 rounded-button border bg-ivory text-sm" required />
             </div>
 
             <div class="space-y-1">
-              <label class="text-xs font-semibold uppercase text-charcoal">Email Address</label>
+              <label class="text-xs font-semibold uppercase text-charcoal">
+                {{ lang.isSwahili() ? 'Barua Pepe' : 'Email Address' }}
+              </label>
               <input type="email" [(ngModel)]="authForm.email" name="email" class="w-full p-3 rounded-button border bg-ivory text-sm" required />
             </div>
 
             <div class="space-y-1">
-              <label class="text-xs font-semibold uppercase text-charcoal">Password</label>
+              <label class="text-xs font-semibold uppercase text-charcoal">
+                {{ lang.isSwahili() ? 'Nenosiri' : 'Password' }}
+              </label>
               <input type="password" [(ngModel)]="authForm.password" name="password" class="w-full p-3 rounded-button border bg-ivory text-sm" required />
             </div>
 
             <p *ngIf="authError" class="text-xs text-rose-600 font-semibold">{{ authError }}</p>
 
             <button type="submit" class="w-full bg-gold hover:bg-gold-soft font-semibold text-xs py-3.5 rounded-button shadow transition-colors text-charcoal">
-              {{ isRegisterMode ? 'Create Account' : 'Sign In' }}
+              {{ isRegisterMode ? (lang.isSwahili() ? 'Fungua Akaunti' : 'Create Account') : (lang.isSwahili() ? 'Ingia' : 'Sign In') }}
             </button>
           </form>
 
           <div class="text-center pt-2">
             <button (click)="isRegisterMode = !isRegisterMode; authError = ''" class="text-xs text-forest underline font-semibold">
-              {{ isRegisterMode ? 'Already have an account? Sign in' : 'Need an account? Sign up' }}
+              {{ isRegisterMode 
+                ? (lang.isSwahili() ? 'Tayari una akaunti? Ingia' : 'Already have an account? Sign in')
+                : (lang.isSwahili() ? 'Huna akaunti? Jisajili' : 'Need an account? Sign up')
+              }}
             </button>
           </div>
         </div>
@@ -181,6 +200,7 @@ export class ProfileComponent implements OnInit {
   auth = inject(AuthService);
   api = inject(ApiService);
   router = inject(Router);
+  lang = inject(LanguageService);
 
   journeys: Journey[] = [];
   savedBusinesses: Business[] = [];
