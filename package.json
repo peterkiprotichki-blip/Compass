@@ -1,0 +1,27 @@
+{
+  "name": "compass-monorepo",
+  "version": "1.0.0",
+  "description": "Compass — Guidance Platform for African Entrepreneurs (Angular, NestJS, MongoDB)",
+  "private": true,
+  "scripts": {
+    "start:db": "\"C:\\Program Files\\MongoDB\\Server\\8.2\\bin\\mongod.exe\" --dbpath ./backend/data/db --port 27017 --bind_ip 127.0.0.1",
+    "start:backend": "npm --prefix backend run start",
+    "start:backend:dev": "npm --prefix backend run start:dev",
+    "start:frontend": "npm --prefix frontend run start",
+    "build:backend": "npm --prefix backend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "build": "npm run build:backend && npm run build:frontend",
+    "seed": "curl -X POST http://localhost:3000/api/seed"
+  },
+  "keywords": [
+    "compass",
+    "african-entrepreneurs",
+    "business-pathfinder",
+    "angular",
+    "nestjs",
+    "mongodb",
+    "tailwind-css"
+  ],
+  "author": "Compass Platform",
+  "license": "MIT"
+}
