@@ -230,10 +230,12 @@ import { GoogleSignInComponent } from '../../shared/components/google-sign-in/go
               (click)="isRegisterMode = !isRegisterMode; authError = ''"
               class="text-xs text-forest hover:text-gold font-semibold transition-colors"
             >
-              {{ isRegisterMode
-                ? (lang.isSwahili() ? 'Tayari una akaunti? Ingia hapa' : 'Already have an account? Sign in')
-                : (lang.isSwahili() ? 'Huna akaunti bado? Jisajili bila malipo' : 'Don\'t have an account? Sign up for free')
-              }}
+              <span *ngIf="isRegisterMode">
+                {{ lang.isSwahili() ? 'Tayari una akaunti? Ingia hapa' : 'Already have an account? Sign in' }}
+              </span>
+              <span *ngIf="!isRegisterMode">
+                {{ lang.isSwahili() ? 'Huna akaunti bado? Jisajili bila malipo' : 'Need an account? Sign up for free' }}
+              </span>
             </button>
           </div>
 

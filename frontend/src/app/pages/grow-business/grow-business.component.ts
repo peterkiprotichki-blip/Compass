@@ -160,10 +160,12 @@ interface ItemSoldDraft {
             (click)="isLoginMode = !isLoginMode; authError = ''"
             class="text-xs text-forest hover:text-gold font-semibold transition-colors"
           >
-            {{ isLoginMode
-              ? (lang.isSwahili() ? 'Huna akaunti bado? Jisajili hapa' : 'Don\'t have an account? Sign up here')
-              : (lang.isSwahili() ? 'Tayari una akaunti? Ingia hapa' : 'Already have an account? Sign in here')
-            }}
+            <span *ngIf="isLoginMode">
+              {{ lang.isSwahili() ? 'Huna akaunti bado? Jisajili hapa' : 'Need an account? Sign up here' }}
+            </span>
+            <span *ngIf="!isLoginMode">
+              {{ lang.isSwahili() ? 'Tayari una akaunti? Ingia hapa' : 'Already have an account? Sign in here' }}
+            </span>
           </button>
         </div>
       </div>

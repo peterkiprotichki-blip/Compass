@@ -339,10 +339,12 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
                 (click)="isLoginMode = !isLoginMode"
                 class="text-xs text-gold font-semibold hover:underline"
               >
-                {{ isLoginMode 
-                  ? (lang.isSwahili() ? 'Mjasiriamali mpya? Tengeneza wasifu' : 'New entrepreneur? Create profile') 
-                  : (lang.isSwahili() ? 'Una akaunti tayari? Ingia hapa' : 'Already have an account? Sign in') 
-                }}
+                <span *ngIf="isLoginMode">
+                  {{ lang.isSwahili() ? 'Mjasiriamali mpya? Tengeneza wasifu' : 'New entrepreneur? Create profile' }}
+                </span>
+                <span *ngIf="!isLoginMode">
+                  {{ lang.isSwahili() ? 'Una akaunti tayari? Ingia hapa' : 'Already have an account? Sign in' }}
+                </span>
               </button>
             </div>
           </div>
