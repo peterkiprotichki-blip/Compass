@@ -14,12 +14,12 @@ export class AuthService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly jwtService: JwtService,
   ) {
-    this.googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || '');
+    this.googleClient = new OAuth2Client((process.env.GOOGLE_CLIENT_ID || '').trim());
   }
 
   getAuthConfig() {
     return {
-      googleClientId: process.env.GOOGLE_CLIENT_ID || '',
+      googleClientId: (process.env.GOOGLE_CLIENT_ID || '').trim(),
     };
   }
 
@@ -199,7 +199,7 @@ export class AuthService {
     let avatarUrl = data.avatarUrl;
 
     if (data.credential) {
-      const clientId = process.env.GOOGLE_CLIENT_ID;
+      const clientId = (process.env.GOOGLE_CLIENT_ID || '').trim();
       try {
         if (clientId) {
           const ticket = await this.googleClient.verifyIdToken({
