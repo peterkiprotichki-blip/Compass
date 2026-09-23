@@ -14,6 +14,7 @@ import { OptionRowComponent } from '../../shared/components/option-row/option-ro
 import { ScoreRingComponent } from '../../shared/components/score-ring/score-ring.component';
 import { MatchCardComponent } from '../../shared/components/match-card/match-card.component';
 import { WeekBlockComponent } from '../../shared/components/week-block/week-block.component';
+import { GoogleSignInComponent } from '../../shared/components/google-sign-in/google-sign-in.component';
 import confetti from 'canvas-confetti';
 
 type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GATE' | 'ANALYSIS' | 'RESULTS';
@@ -30,45 +31,72 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
     ScoreRingComponent,
     MatchCardComponent,
     WeekBlockComponent,
+    GoogleSignInComponent,
   ],
   template: `
-    <div class="min-h-screen bg-ivory text-charcoal">
+    <div class="min-h-screen" [ngClass]="currentScreen === 'SPLASH' || currentScreen === 'ANALYSIS' ? 'bg-forest text-ivory' : 'bg-ivory text-charcoal'">
       
       <!-- ================= 1. SPLASH SCREEN ================= -->
-      <div *ngIf="currentScreen === 'SPLASH'" class="min-h-screen bg-forest text-ivory flex flex-col items-center justify-between p-6 sm:p-12 relative overflow-hidden animate-fadeIn">
-        <div class="w-full flex justify-end">
-          <button (click)="lang.toggleLanguage()" class="text-xs font-semibold px-3 py-1.5 rounded-pill bg-forest-deep border border-forest-line text-gold">
-            {{ lang.currentLang().toUpperCase() }}
-          </button>
-        </div>
+      <div *ngIf="currentScreen === 'SPLASH'" class="min-h-[calc(100dvh-5rem)] bg-forest text-ivory flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden animate-fadeIn">
+        <!-- Subtle background accents -->
+        <div class="absolute inset-0 pointer-events-none opacity-10 bg-[radial-gradient(#D4A017_1px,transparent_1px)] [background-size:24px_24px]"></div>
+        <div class="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-gold/15 blur-3xl pointer-events-none"></div>
 
-        <div class="flex flex-col items-center text-center max-w-lg space-y-6 my-auto">
+        <div class="w-full max-w-md flex flex-col items-center text-center space-y-4 sm:space-y-6 relative z-10 my-auto">
           <!-- Animated Compass Logo -->
-          <div class="relative w-28 h-28 flex items-center justify-center">
-            <div class="absolute inset-0 rounded-full bg-gold/15 blur-xl animate-pulse"></div>
-            <img src="brand/compass-mark.png" alt="Compass" class="w-24 h-24 animate-spin-slow">
+          <div class="relative w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center">
+            <div class="absolute inset-0 rounded-full bg-gold/20 blur-xl animate-pulse"></div>
+            <img src="brand/compass-mark.png" alt="Compass" class="w-16 h-16 sm:w-20 sm:h-20 animate-spin-slow">
           </div>
 
-          <h1 class="text-4xl sm:text-5xl font-serif font-bold tracking-tight text-ivory">
-            Compass<span class="text-gold">.</span>
-          </h1>
+          <div class="space-y-1.5 sm:space-y-2">
+            <h1 class="text-3xl sm:text-5xl font-serif font-bold tracking-tight text-ivory">
+              Compass<span class="text-gold">.</span>
+            </h1>
 
-          <p class="text-lg text-ivory/80 font-normal">
-            {{ lang.isSwahili() ? 'Mwongozo leo. Kesho yenye mwangaza zaidi.' : 'Guidance today. Brighter tomorrows.' }}
-          </p>
+            <p class="text-base sm:text-lg text-ivory/85 font-normal max-w-xs sm:max-w-sm mx-auto">
+              {{ lang.isSwahili() ? 'Mwongozo leo. Kesho yenye mwangaza zaidi.' : 'Guidance today. Brighter tomorrows.' }}
+            </p>
 
-          <p class="text-xs uppercase tracking-widest text-gold font-semibold">
-            {{ lang.isSwahili() ? 'Kwa Wajasiriamali wa Afrika' : 'For African Entrepreneurs · At Every Stage' }}
-          </p>
-        </div>
+            <p class="text-[11px] sm:text-xs uppercase tracking-widest text-gold font-semibold">
+              {{ lang.isSwahili() ? 'Kwa Wajasiriamali wa Afrika' : 'For African Entrepreneurs · At Every Stage' }}
+            </p>
+          </div>
 
-        <div class="w-full max-w-md pt-6">
-          <button
-            (click)="goToScreen('LANGUAGE')"
-            class="w-full bg-gold hover:bg-gold-soft text-charcoal font-semibold text-base py-4 rounded-button shadow-lg transition-all"
-          >
-            {{ lang.isSwahili() ? 'Anza Safari Yako' : 'Start Pathfinder' }}
-          </button>
+          <!-- Prominent Centered CTA Button -->
+          <div class="w-full max-w-sm pt-2 space-y-4">
+            <button
+              (click)="goToScreen('LANGUAGE')"
+              class="w-full bg-gold hover:bg-gold-soft text-charcoal font-bold text-sm sm:text-base py-3.5 sm:py-4 px-6 rounded-button shadow-lg hover:shadow-gold-glow transition-all flex items-center justify-center gap-2 group"
+            >
+              <span>{{ lang.isSwahili() ? 'Anza Safari Yako' : 'Start Pathfinder' }}</span>
+              <svg class="w-5 h-5 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+              </svg>
+            </button>
+
+            <!-- Quick Trust / Value Highlights -->
+            <div class="grid grid-cols-3 gap-2 w-full pt-3 border-t border-forest-line/50 text-center">
+              <div class="flex flex-col items-center gap-1 text-[11px] text-ivory/70">
+                <svg class="w-4 h-4 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{{ lang.isSwahili() ? 'Dakika 5' : '5 Minutes' }}</span>
+              </div>
+              <div class="flex flex-col items-center gap-1 text-[11px] text-ivory/70 border-x border-forest-line/40 px-1">
+                <svg class="w-4 h-4 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{{ lang.isSwahili() ? 'Biashara 3 Bora' : 'Top 3 Matches' }}</span>
+              </div>
+              <div class="flex flex-col items-center gap-1 text-[11px] text-ivory/70">
+                <svg class="w-4 h-4 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <span>{{ lang.isSwahili() ? 'Mpango Siku 30' : '30-Day Plan' }}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -77,8 +105,10 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
         <div class="w-full max-w-md bg-white p-8 rounded-sheet border border-forest-line/15 shadow-light-lg space-y-6">
           
           <div class="text-center space-y-2">
-            <div class="w-12 h-12 mx-auto rounded-full bg-forest text-gold flex items-center justify-center text-xl font-bold">
-              🌍
+            <div class="w-12 h-12 mx-auto rounded-full bg-forest text-gold flex items-center justify-center">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
             <h2 class="text-2xl font-serif font-bold text-charcoal">
               Choose your language
@@ -149,8 +179,11 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
               (click)="startQuestions()"
               class="bg-white p-6 rounded-sheet border-2 border-gold shadow-light-md cursor-pointer hover:scale-[1.02] transition-transform space-y-3"
             >
-              <div class="w-10 h-10 rounded-full bg-forest text-gold flex items-center justify-center text-lg">
-                🧭
+              <div class="w-10 h-10 rounded-full bg-forest text-gold flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                  <polygon points="12 8 16 16 8 16" fill="currentColor" opacity="0.8" />
+                </svg>
               </div>
               <h3 class="font-serif font-bold text-xl text-charcoal">
                 {{ lang.t.btnStartMyBusiness }}
@@ -169,8 +202,10 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
               (click)="router.navigate(['/grow-business'])"
               class="bg-white p-6 rounded-sheet border border-forest/20 shadow-light-sm cursor-pointer hover:scale-[1.02] transition-transform space-y-3"
             >
-              <div class="w-10 h-10 rounded-full bg-ivory-sunk text-charcoal flex items-center justify-center text-lg">
-                📈
+              <div class="w-10 h-10 rounded-full bg-ivory-sunk text-forest flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
               </div>
               <h3 class="font-serif font-bold text-xl text-charcoal">
                 {{ lang.t.btnGrowMyBusiness }}
@@ -190,77 +225,137 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
         </div>
       </div>
 
-      <!-- ================= 4. ACCOUNT CREATION & GOOGLE SIGN-IN GATE ================= -->
+      <!-- ================= 4. ACCOUNT CREATION & GOOGLE SIGN-IN GATE (UPFRONT) ================= -->
       <div *ngIf="currentScreen === 'ACCOUNT_GATE'" class="min-h-screen flex flex-col justify-center items-center p-6 bg-ivory animate-fadeIn">
-        <div class="w-full max-w-md bg-white p-8 sm:p-10 rounded-sheet border border-forest-line/15 shadow-light-lg space-y-6">
+        <div class="w-full max-w-md bg-white p-6 sm:p-10 rounded-sheet border border-forest-line/15 shadow-light-lg space-y-6">
           
+          <!-- Top Bar: Step & Language Toggle -->
+          <div class="flex items-center justify-between pb-2 border-b border-forest-line/10">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-gold">
+              {{ lang.isSwahili() ? 'Hatua ya 1 kati ya 2' : 'Step 1 of 2: Profile' }}
+            </span>
+            <button
+              (click)="lang.toggleLanguage()"
+              type="button"
+              class="flex items-center gap-1.5 px-2.5 py-1 rounded-pill bg-ivory border border-forest-line/20 text-xs font-semibold hover:border-gold transition-colors"
+            >
+              <span [class.text-gold]="lang.currentLang() === 'en'" [class.text-charcoal/60]="lang.currentLang() !== 'en'">EN</span>
+              <span class="text-forest-line/30">|</span>
+              <span [class.text-gold]="lang.currentLang() === 'sw'" [class.text-charcoal/60]="lang.currentLang() !== 'sw'">SW</span>
+            </button>
+          </div>
+
           <div class="text-center space-y-2">
-            <div class="w-12 h-12 mx-auto rounded-full bg-forest text-gold flex items-center justify-center text-xl">
-              👤
+            <div class="w-12 h-12 mx-auto rounded-full bg-forest text-gold flex items-center justify-center">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
             </div>
             <h2 class="text-2xl font-serif font-bold text-charcoal">
-              Create Your Profile
+              {{ isLoginMode 
+                ? (lang.isSwahili() ? 'Karibu Tena kwenye Compass' : 'Welcome Back to Compass') 
+                : (lang.isSwahili() ? 'Tengeneza Wasifu Wako Kuanza' : 'Create Your Profile to Get Started') 
+              }}
             </h2>
             <p class="text-xs text-charcoal/65">
-              Save your assessment results, track your 30-day action plan, and unlock personalized AI recommendations.
+              {{ isLoginMode
+                ? (lang.isSwahili() ? 'Ingia ili kuendelea na safari yako na kufungua mapendekezo yako.' : 'Log in to continue your assessment and view your personalized roadmap.')
+                : (lang.isSwahili() ? 'Weka taarifa zako ili tuhifadhi majibu yako, tathmini ya nguvu na mwongozo wa siku 30.' : 'Save your progress upfront, track your strengths, and secure your personalized 30-day action plan.')
+              }}
             </p>
           </div>
 
           <!-- Quick One-Click Google Sign In Button -->
           <div class="space-y-3">
-            <button
-              (click)="onGoogleSignIn()"
-              class="w-full flex items-center justify-center gap-3 bg-white hover:bg-ivory text-charcoal font-semibold text-sm py-3.5 px-4 rounded-button border border-forest-line/25 shadow-sm transition-all"
-            >
-              <svg class="w-5 h-5" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-              </svg>
-              <span>Continue with Google</span>
-            </button>
+            <app-google-sign-in
+              [text]="isLoginMode ? 'signin_with' : 'signup_with'"
+              (signedIn)="onGoogleUserAuthenticated($event)"
+              (signInError)="onGoogleSignInError($event)"
+            ></app-google-sign-in>
 
             <div class="flex items-center my-3">
               <div class="flex-grow border-t border-forest-line/10"></div>
-              <span class="px-3 text-xs text-charcoal/40 uppercase font-semibold">Or use email</span>
+              <span class="px-3 text-xs text-charcoal/40 uppercase font-semibold">
+                {{ lang.isSwahili() ? 'Au tumia barua pepe' : 'Or use email' }}
+              </span>
               <div class="flex-grow border-t border-forest-line/10"></div>
             </div>
 
             <!-- Email Registration Form -->
             <form (submit)="onEmailRegister($event)" class="space-y-3 text-left">
-              <div>
-                <label class="block text-[11px] font-bold uppercase tracking-wider text-charcoal">Your Full Name</label>
-                <input type="text" [(ngModel)]="accountForm.name" name="name" class="w-full p-3 rounded-button border bg-ivory text-sm mt-1 focus:outline-none focus:border-gold" placeholder="e.g. Wangari Mwangi" required />
+              <div *ngIf="!isLoginMode">
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-charcoal">
+                  {{ lang.isSwahili() ? 'Jina Kamili' : 'Your Full Name' }} *
+                </label>
+                <input type="text" [(ngModel)]="accountForm.name" name="name" class="w-full p-3 rounded-button border bg-ivory text-sm mt-1 focus:outline-none focus:border-gold" [placeholder]="lang.isSwahili() ? 'mfano: Wangari Mwangi' : 'e.g. Wangari Mwangi'" [required]="!isLoginMode" />
               </div>
 
               <div>
-                <label class="block text-[11px] font-bold uppercase tracking-wider text-charcoal">Email Address</label>
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-charcoal">
+                  {{ lang.isSwahili() ? 'Barua Pepe' : 'Email Address' }} *
+                </label>
                 <input type="email" [(ngModel)]="accountForm.email" name="email" class="w-full p-3 rounded-button border bg-ivory text-sm mt-1 focus:outline-none focus:border-gold" placeholder="you@gmail.com" required />
               </div>
 
+              <div *ngIf="!isLoginMode">
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-charcoal">
+                  {{ lang.isSwahili() ? 'Nambari ya Simu (M-Pesa / SMS)' : 'Phone Number (Optional)' }}
+                </label>
+                <input type="tel" [(ngModel)]="accountForm.phone" name="phone" class="w-full p-3 rounded-button border bg-ivory text-sm mt-1 focus:outline-none focus:border-gold" [placeholder]="lang.isSwahili() ? 'mfano: 0712 345 678' : 'e.g. 0712 345 678'" />
+              </div>
+
               <div>
-                <label class="block text-[11px] font-bold uppercase tracking-wider text-charcoal">Password</label>
-                <input type="password" [(ngModel)]="accountForm.password" name="password" class="w-full p-3 rounded-button border bg-ivory text-sm mt-1 focus:outline-none focus:border-gold" placeholder="Choose a password" required />
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-charcoal">
+                  {{ lang.isSwahili() ? 'Nenosiri' : 'Password' }}
+                </label>
+                <input type="password" [(ngModel)]="accountForm.password" name="password" class="w-full p-3 rounded-button border bg-ivory text-sm mt-1 focus:outline-none focus:border-gold" [placeholder]="lang.isSwahili() ? 'Weka nenosiri' : 'Choose a password'" required />
               </div>
 
               <button
                 type="submit"
-                class="w-full bg-gold hover:bg-gold-soft text-charcoal font-semibold text-sm py-3.5 rounded-button shadow transition-colors mt-2"
+                class="w-full bg-gold hover:bg-gold-soft text-charcoal font-bold text-sm py-3.5 rounded-button shadow transition-colors mt-2"
               >
-                Create Profile & View Results →
+                {{ isLoginMode 
+                  ? (lang.isSwahili() ? 'Ingia & Anza Maswali →' : 'Log In & Begin Assessment →') 
+                  : (lang.isSwahili() ? 'Tengeneza Wasifu & Anza Maswali →' : 'Create Profile & Begin Assessment →') 
+                }}
               </button>
             </form>
+
+            <!-- Toggle Login / Register -->
+            <div class="text-center pt-1">
+              <button
+                type="button"
+                (click)="isLoginMode = !isLoginMode"
+                class="text-xs text-gold font-semibold hover:underline"
+              >
+                {{ isLoginMode 
+                  ? (lang.isSwahili() ? 'Mjasiriamali mpya? Tengeneza wasifu' : 'New entrepreneur? Create profile') 
+                  : (lang.isSwahili() ? 'Una akaunti tayari? Ingia hapa' : 'Already have an account? Sign in') 
+                }}
+              </button>
+            </div>
           </div>
 
           <!-- Skip / Guest Option -->
           <div class="text-center pt-2">
             <button
-              (click)="submitQuestionnaire()"
+              (click)="startQuestionsAfterAuth()"
               class="text-xs text-charcoal/60 hover:text-charcoal underline"
             >
-              Skip for now and continue as guest
+              {{ lang.isSwahili() ? 'Endelea kama mgeni kwa sasa' : 'Skip for now and continue as guest' }}
             </button>
+          </div>
+
+          <!-- Switch to Grow Business -->
+          <div class="text-center pt-3 border-t border-forest-line/10 mt-2">
+            <a
+              routerLink="/grow-business"
+              class="text-xs text-forest hover:text-gold font-medium inline-flex items-center gap-1 transition-colors"
+            >
+              <span>{{ lang.isSwahili() ? 'Tayari unafanya biashara? Bofya hapa' : 'Already operating a business? Go to Grow Business' }}</span>
+              <span>→</span>
+            </a>
           </div>
 
         </div>
@@ -269,8 +364,19 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
       <!-- ================= 4. QUESTIONNAIRE FLOW (22 QUESTIONS) ================= -->
       <div *ngIf="currentScreen === 'QUESTIONS'" class="min-h-screen flex flex-col justify-between py-6 px-4 sm:px-8 max-w-3xl mx-auto animate-fadeIn">
         
+        <!-- Loading State -->
+        <div *ngIf="isLoadingQuestions || questions.length === 0" class="my-auto py-24 flex flex-col items-center justify-center space-y-4">
+          <div class="relative w-14 h-14 flex items-center justify-center">
+            <div class="absolute inset-0 rounded-full bg-gold/20 blur-md animate-pulse"></div>
+            <img src="brand/compass-mark.png" alt="Compass" class="w-12 h-12 animate-spin-slow">
+          </div>
+          <p class="text-sm font-serif font-bold text-forest">
+            {{ lang.isSwahili() ? 'Inapakia maswali ya Pathfinder...' : 'Loading Pathfinder assessment...' }}
+          </p>
+        </div>
+
         <!-- Pinned Header: Progress bar + Step counter -->
-        <div class="space-y-4">
+        <div class="space-y-4" *ngIf="!isLoadingQuestions && questions.length > 0">
           <div class="flex items-center justify-between">
             <button
               (click)="onBackQuestion()"
@@ -297,7 +403,7 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
         </div>
 
         <!-- Question Card -->
-        <div class="my-8 bg-white p-6 sm:p-10 rounded-sheet border border-forest-line/15 shadow-light-md space-y-6" *ngIf="currentQuestion">
+        <div class="my-8 bg-white p-6 sm:p-10 rounded-sheet border border-forest-line/15 shadow-light-md space-y-6" *ngIf="!isLoadingQuestions && currentQuestion">
           
           <!-- Section Tag -->
           <div class="space-y-1">
@@ -377,9 +483,12 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
             <div class="flex items-center gap-3 pt-2">
               <button
                 (click)="submitQuestionnaire()"
-                class="flex-1 bg-gold hover:bg-gold-soft text-charcoal font-semibold text-xs py-3 rounded-button shadow transition-all"
+                class="flex-1 bg-gold hover:bg-gold-soft text-charcoal font-semibold text-xs py-3 rounded-button shadow transition-all flex items-center justify-center gap-1.5"
               >
-                🔄 Retry Analysis
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>Retry Analysis</span>
               </button>
               <button
                 (click)="goToScreen('QUESTIONS')"
@@ -419,8 +528,11 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
           <div class="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
             
             <div class="md:col-span-8 space-y-4">
-              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-pill bg-forest-deep border border-forest-line text-xs font-semibold text-gold uppercase">
-                <span>🛡️ {{ lang.t.archetypeTitle }}</span>
+              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-pill bg-forest-deep border border-forest-line text-xs font-semibold text-gold uppercase">
+                <svg class="w-3.5 h-3.5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span>{{ lang.t.archetypeTitle }}</span>
               </div>
               <h1 class="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-ivory">
                 {{ lang.isSwahili() ? result.primaryArchetypeSw : result.primaryArchetype }}
@@ -540,7 +652,9 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
           <!-- Blind spots -->
           <div class="bg-white rounded-card p-6 border border-forest-line/15 shadow-light-sm space-y-4">
             <h4 class="font-serif font-bold text-lg text-charcoal flex items-center gap-2">
-              <span>⚠️</span>
+              <svg class="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
               <span>{{ lang.t.blindSpotsTitle }}</span>
             </h4>
             <ul class="space-y-2.5 text-xs text-charcoal/80">
@@ -554,7 +668,9 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
           <!-- Skills to Learn -->
           <div class="bg-white rounded-card p-6 border border-forest-line/15 shadow-light-sm space-y-4">
             <h4 class="font-serif font-bold text-lg text-charcoal flex items-center gap-2">
-              <span>🎯</span>
+              <svg class="w-5 h-5 text-forest flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+              </svg>
               <span>{{ lang.t.skillsToLearnTitle }}</span>
             </h4>
             <div class="flex flex-wrap gap-2">
@@ -629,8 +745,10 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
 
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-forest-line pb-4">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center text-gold text-lg font-bold animate-pulse">
-                ✨
+              <div class="w-10 h-10 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center text-gold animate-pulse">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
               </div>
               <div>
                 <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-pill bg-gold/15 text-gold text-[10px] font-bold uppercase tracking-wider">
@@ -647,7 +765,10 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
           <!-- Executive Brief -->
           <div class="bg-forest-deep/90 p-5 sm:p-6 rounded-card border border-forest-line space-y-2">
             <h4 class="text-xs font-bold uppercase tracking-widest text-gold flex items-center gap-2">
-              <span>📋 Executive Briefing</span>
+              <svg class="w-4 h-4 text-gold flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span>Executive Briefing</span>
             </h4>
             <p class="text-sm text-ivory/90 leading-relaxed font-normal">
               {{ result.aiInsight.executiveBrief }}
@@ -658,7 +779,10 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
             <!-- Local Competitive Edge -->
             <div class="bg-forest-deep/70 p-5 rounded-card border border-forest-line space-y-2">
               <h4 class="text-xs font-bold uppercase tracking-widest text-gold flex items-center gap-2">
-                <span>⚡ Local Market Advantage</span>
+                <svg class="w-4 h-4 text-gold flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span>Local Market Advantage</span>
               </h4>
               <p class="text-xs text-ivory/80 leading-relaxed">
                 {{ result.aiInsight.localCompetitiveEdge }}
@@ -668,7 +792,10 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
             <!-- Risk Shield -->
             <div class="bg-forest-deep/70 p-5 rounded-card border border-forest-line space-y-2">
               <h4 class="text-xs font-bold uppercase tracking-widest text-gold flex items-center gap-2">
-                <span>🛡️ Risk Shield & Capital Protection</span>
+                <svg class="w-4 h-4 text-gold flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span>Risk Shield & Capital Protection</span>
               </h4>
               <p class="text-xs text-ivory/80 leading-relaxed">
                 {{ result.aiInsight.riskShield }}
@@ -679,7 +806,10 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
           <!-- Day 1 Action Checklist -->
           <div *ngIf="result.aiInsight.dayOneActionChecklist && result.aiInsight.dayOneActionChecklist.length > 0" class="bg-forest-deep/80 p-5 sm:p-6 rounded-card border border-forest-line space-y-3">
             <h4 class="text-xs font-bold uppercase tracking-widest text-gold flex items-center gap-2">
-              <span>🚀 Day 1 Execution Checklist</span>
+              <svg class="w-4 h-4 text-gold flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+              </svg>
+              <span>Day 1 Execution Checklist</span>
             </h4>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <div *ngFor="let item of result.aiInsight.dayOneActionChecklist" class="flex items-start gap-2.5 text-xs text-ivory/90 bg-forest/50 p-3 rounded-button border border-forest-line/30">
@@ -694,8 +824,10 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
         <div class="bg-white rounded-sheet p-6 sm:p-8 border border-forest-line/15 shadow-light-md space-y-6">
           <div class="flex items-center justify-between border-b border-forest-line/10 pb-4">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-forest text-gold flex items-center justify-center text-lg">
-                💬
+              <div class="w-10 h-10 rounded-full bg-forest text-gold flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
               </div>
               <div>
                 <h3 class="text-xl font-serif font-bold text-charcoal">
@@ -740,9 +872,12 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
               *ngFor="let prompt of quickChatPrompts"
               (click)="sendQuickPrompt(prompt)"
               [disabled]="isChatLoading"
-              class="text-[11px] font-medium px-3 py-1.5 rounded-pill bg-ivory hover:bg-forest/5 text-charcoal border border-forest-line/20 transition-all text-left"
+              class="text-[11px] font-medium px-3 py-1.5 rounded-pill bg-ivory hover:bg-forest/5 text-charcoal border border-forest-line/20 transition-all text-left flex items-center gap-1.5"
             >
-              💡 {{ prompt }}
+              <svg class="w-3.5 h-3.5 text-gold flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              <span>{{ prompt }}</span>
             </button>
           </div>
 
@@ -802,7 +937,8 @@ export class PathfinderWizardComponent implements OnInit {
   auth = inject(AuthService);
   router = inject(Router);
 
-  currentScreen: FlowScreen = 'SPLASH';
+  currentScreen: FlowScreen = 'ACCOUNT_GATE';
+  isLoadingQuestions = true;
   questions: QuestionDefinition[] = [];
   currentQuestionIndex = 0;
   answers: Record<string, any> = {};
@@ -823,15 +959,25 @@ export class PathfinderWizardComponent implements OnInit {
 
   ngOnInit() {
     this.loadQuestions();
+    // Start immediately on Question 1 if logged in, or upfront profile creation if new visitor.
+    // Eliminates the redundant splash screen so users only click "Start" once.
+    if (this.auth.currentUser()) {
+      this.currentScreen = 'QUESTIONS';
+    } else {
+      this.currentScreen = 'ACCOUNT_GATE';
+    }
   }
 
   loadQuestions() {
+    this.isLoadingQuestions = true;
     this.api.getQuestions().subscribe({
       next: res => {
-        this.questions = res.questions;
+        this.questions = res.questions || [];
+        this.isLoadingQuestions = false;
       },
       error: err => {
         console.error('Error fetching questions', err);
+        this.isLoadingQuestions = false;
       }
     });
   }
@@ -845,6 +991,14 @@ export class PathfinderWizardComponent implements OnInit {
   }
 
   startQuestions() {
+    if (!this.auth.currentUser()) {
+      this.goToScreen('ACCOUNT_GATE');
+      return;
+    }
+    this.startQuestionsAfterAuth();
+  }
+
+  startQuestionsAfterAuth() {
     this.currentQuestionIndex = 0;
     this.currentScreen = 'QUESTIONS';
   }
@@ -888,10 +1042,11 @@ export class PathfinderWizardComponent implements OnInit {
     return true;
   }
 
-  // Profile creation & authentication gate
+  isLoginMode = false;
   accountForm = {
     name: '',
     email: '',
+    phone: '',
     password: '',
   };
 
@@ -912,11 +1067,7 @@ export class PathfinderWizardComponent implements OnInit {
 
   onNextQuestion() {
     if (this.isLastQuestion()) {
-      if (!this.auth.currentUser()) {
-        this.goToScreen('ACCOUNT_GATE');
-      } else {
-        this.submitQuestionnaire();
-      }
+      this.submitQuestionnaire();
     } else {
       this.currentQuestionIndex++;
     }
@@ -928,46 +1079,52 @@ export class PathfinderWizardComponent implements OnInit {
     }
   }
 
-  onGoogleSignIn() {
-    const suggestedEmail = this.accountForm.email || 'founder@gmail.com';
-    const email = window.prompt('Google One-Tap / OAuth: Confirm your Google Email', suggestedEmail) || suggestedEmail;
-    const name = this.accountForm.name || (email.split('@')[0].replace('.', ' '));
-    const formattedName = name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  onGoogleUserAuthenticated(user: any) {
+    if (user?.name && !this.accountForm.name) {
+      this.accountForm.name = user.name;
+    }
+    if (user?.email && !this.accountForm.email) {
+      this.accountForm.email = user.email;
+    }
+    this.startQuestionsAfterAuth();
+  }
 
-    this.auth.loginWithGoogle({
-      googleId: 'google_' + Math.abs(email.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0)),
-      email: email,
-      name: formattedName,
-      avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(formattedName)}`
-    }).subscribe({
-      next: () => {
-        this.submitQuestionnaire();
-      },
-      error: err => {
-        console.error('Google sign in error', err);
-        this.submitQuestionnaire();
-      }
-    });
+  onGoogleSignInError(err: any) {
+    console.error('Google Sign-In failed:', err);
   }
 
   onEmailRegister(event: Event) {
     event.preventDefault();
-    if (!this.accountForm.email || !this.accountForm.name) return;
+    if (!this.accountForm.email) return;
+
+    if (this.isLoginMode) {
+      this.auth.login(this.accountForm.email, this.accountForm.password).subscribe({
+        next: () => this.startQuestionsAfterAuth(),
+        error: (err: any) => {
+          console.error(err);
+          alert(this.lang.isSwahili() ? 'Hitilafu wakati wa kuingia' : 'Invalid email or password');
+        }
+      });
+      return;
+    }
+
+    if (!this.accountForm.name) return;
 
     this.auth.register({
       name: this.accountForm.name,
       email: this.accountForm.email,
+      phone: this.accountForm.phone,
       password: this.accountForm.password || 'Compass@2026',
       language: this.lang.currentLang(),
     }).subscribe({
       next: () => {
-        this.submitQuestionnaire();
+        this.startQuestionsAfterAuth();
       },
       error: () => {
         // Fallback: If user already exists, attempt login
         this.auth.login(this.accountForm.email, this.accountForm.password).subscribe({
-          next: () => this.submitQuestionnaire(),
-          error: () => this.submitQuestionnaire(),
+          next: () => this.startQuestionsAfterAuth(),
+          error: () => this.startQuestionsAfterAuth(),
         });
       }
     });
@@ -979,24 +1136,21 @@ export class PathfinderWizardComponent implements OnInit {
     this.analysisProgress = 0;
     this.submitStartTime = Date.now();
 
-    // Animated line-by-line checklist
+    // Fast animated checklist (120ms per step)
     const interval = setInterval(() => {
       this.analysisProgress++;
       if (this.analysisProgress >= this.analysisSteps.length) {
         clearInterval(interval);
       }
-    }, 450);
+    }, 120);
 
     const userId = this.auth.getEffectiveUserId();
     this.api.submitAssessment(this.answers, userId).subscribe({
       next: res => {
-        const elapsed = Date.now() - this.submitStartTime;
-        const delay = Math.max(150, 2200 - elapsed);
-        setTimeout(() => {
-          clearInterval(interval);
-          this.analysisProgress = this.analysisSteps.length;
-          this.result = res;
-          this.currentScreen = 'RESULTS';
+        clearInterval(interval);
+        this.analysisProgress = this.analysisSteps.length;
+        this.result = res;
+        this.currentScreen = 'RESULTS';
 
           // Initialize Gemini AI chat with greeting
           const topMatchName = res.topMatches?.[0]?.name || 'your recommended venture';
@@ -1029,7 +1183,6 @@ export class PathfinderWizardComponent implements OnInit {
           } catch (e) {
             console.warn('Confetti effect failed', e);
           }
-        }, delay);
       },
       error: err => {
         console.error('Error submitting assessment', err);

@@ -46,38 +46,21 @@ export class AssessmentService {
       userId,
     );
 
-    // 4. Generate Gemini AI Strategic Brief & Recommendations with fail-safe timeout
+    // 4. Generate Strategic Brief & Recommendations instantly
     const topBiz = calculatedResult.topMatches?.[0];
-    let aiInsight: any = null;
-    try {
-      aiInsight = await Promise.race([
-        this.geminiService.generatePersonalizedAdvisory(
-          answers,
-          calculatedResult.primaryArchetype || 'The Seller',
-          calculatedResult.readinessScore || 80,
-          topBiz?.name || 'Retail Business',
-          topBiz?.category || 'Retail',
-          answers['q3'] || '50k_100k',
-        ),
-        new Promise<null>((_, reject) =>
-          setTimeout(() => reject(new Error('AI advisory timeout')), 8000),
-        ),
-      ]);
-    } catch (err) {
-      console.warn(`[AssessmentService] AI advisory fallback used: ${err.message}`);
-      aiInsight = {
-        executiveBrief: `Based on your natural profile as ${calculatedResult.primaryArchetype}, you have strong execution abilities suited for ${topBiz?.name || 'an African retail venture'}. With disciplined cash flow control, you have a solid runway to reach profitability.`,
-        localCompetitiveEdge: `Your chosen location provides an immediate advantage because neighborhood consumers are looking for reliable quality and courteous service that competitors often neglect.`,
-        dayOneActionChecklist: [
-          'Visit 3 local wholesale suppliers to compare unit costs and credit terms.',
-          'Set up a separate dedicated mobile money till number for all sales receipts.',
-          'Reach out to your first 10 prospective customers personally on WhatsApp.',
-        ],
-        riskShield: `Maintain at least 15% of your startup capital in an emergency reserve to cushion unexpected inventory delays or slow initial weeks.`,
-      };
-    }
+    const archetype = calculatedResult.primaryArchetype || 'The Seller';
+    const capital = answers['q3'] || '50k_100k';
 
-    calculatedResult.aiInsight = aiInsight;
+    calculatedResult.aiInsight = {
+      executiveBrief: `Based on your natural profile as ${archetype}, you have strong execution abilities suited for ${topBiz?.name || 'an African retail venture'}. With an initial investment in ${capital}, your best path is launching lean with disciplined cash flow control and high-touch customer service.`,
+      localCompetitiveEdge: `Your chosen location provides an immediate advantage because neighborhood consumers are looking for reliable quality and courteous service that incumbent competitors frequently neglect.`,
+      dayOneActionChecklist: [
+        'Visit 3 local wholesale suppliers to compare unit costs and credit terms.',
+        'Set up a separate dedicated mobile money till number for all sales receipts.',
+        'Reach out to your first 10 prospective customers personally on WhatsApp.',
+      ],
+      riskShield: `Maintain at least 15% of your startup capital in an emergency reserve to cushion unexpected inventory delays or slow initial weeks.`,
+    };
 
     // 5. Save and return full result
     const result = new this.resultModel(calculatedResult);

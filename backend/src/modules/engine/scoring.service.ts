@@ -263,7 +263,7 @@ export class ScoringService {
     const top5Strengths: StrengthProfileItem[] = sortedStrengths.slice(0, 5);
 
     // 2. ARCHETYPE ENGINE
-    const archetypeScores = this.computeArchetypes(strengthScores, answers['q10']);
+    const archetypeScores = this.computeArchetypes(strengthScores);
     const sortedArchetypes = Object.entries(archetypeScores).sort((a, b) => b[1] - a[1]);
     const primaryArchetype = sortedArchetypes[0][0];
     const secondaryArchetype = sortedArchetypes[1][0];
@@ -442,6 +442,25 @@ export class ScoringService {
         break;
     }
 
+    // Q10: Online / Public Visibility Comfort (Q4: feeds Strength Engine directly)
+    switch (answers['q10']) {
+      case 'opt_a':
+        add('Communication', 15); add('Creativity', 15); add('Networking', 10);
+        break;
+      case 'opt_b':
+        add('Communication', 8); add('Networking', 8); add('Adaptability', 5);
+        break;
+      case 'opt_c':
+        add('Attention To Detail', 5); add('Technical Ability', 5);
+        break;
+      case 'opt_d':
+        add('Organization', 10); add('Attention To Detail', 8);
+        break;
+      case 'opt_e':
+        add('Organization', 15); add('Problem Solving', 10);
+        break;
+    }
+
     // Q11: Customer Interaction
     switch (answers['q11']) {
       case 'yes':
@@ -550,7 +569,6 @@ export class ScoringService {
 
   private computeArchetypes(
     strengths: Record<string, number>,
-    q10Answer?: string,
   ): Record<string, number> {
     const get = (name: string) => strengths[name] || 50;
 
@@ -572,14 +590,14 @@ export class ScoringService {
     );
 
     // The Creator: Creativity 45, Adaptability 30, Communication 25
-    let creator = Math.round(
+    const creator = Math.round(
       get('Creativity') * 0.45 +
       get('Adaptability') * 0.30 +
       get('Communication') * 0.25,
     );
 
     // The Teacher: Teaching 50, Communication 30, Leadership 20
-    let teacher = Math.round(
+    const teacher = Math.round(
       get('Teaching') * 0.50 +
       get('Communication') * 0.30 +
       get('Leadership') * 0.20,
@@ -600,28 +618,6 @@ export class ScoringService {
       get('Strategic Thinking') * 0.25 +
       get('Decision Making') * 0.15,
     );
-
-    // Q10 online visibility adjustments:
-    // A -> Creator +20, Teacher +10
-    // B -> Creator +10
-    // C -> none
-    // D -> Creator -10
-    // E -> Creator -20
-    switch (q10Answer) {
-      case 'opt_a':
-        creator += 15;
-        teacher += 8;
-        break;
-      case 'opt_b':
-        creator += 8;
-        break;
-      case 'opt_d':
-        creator -= 8;
-        break;
-      case 'opt_e':
-        creator -= 15;
-        break;
-    }
 
     return {
       'The Seller': Math.min(Math.max(seller, 30), 99),
@@ -822,6 +818,49 @@ export class ScoringService {
 
       if (matchesLocalOpportunity) {
         score += 5;
+      }
+
+      // 8. Q13 Work Environment Alignment (+15 pts) (Q5 Confirmed)
+      const q13 = answers['q13'];
+      if (q13) {
+        const cat = biz.category.toLowerCase();
+        if (q13 === 'shop' && (cat.includes('retail') || cat.includes('trade') || biz.slug.includes('kiosk') || biz.slug.includes('shop') || biz.slug.includes('store'))) {
+          score += 15;
+        } else if (q13 === 'service' && (cat.includes('service') || cat.includes('beauty') || biz.slug.includes('salon') || biz.slug.includes('wash') || biz.slug.includes('repair'))) {
+          score += 15;
+        } else if (q13 === 'digital' && (cat.includes('digital') || cat.includes('tech') || biz.slug.includes('online') || biz.slug.includes('freelance') || biz.slug.includes('content'))) {
+          score += 15;
+        } else if (q13 === 'production' && (cat.includes('agriculture') || cat.includes('manufacturing') || cat.includes('processing') || biz.slug.includes('farming') || biz.slug.includes('poultry'))) {
+          score += 15;
+        } else if (q13 === 'flexible' && (biz.slug.includes('delivery') || biz.slug.includes('courier') || biz.slug.includes('event') || cat.includes('transport') || cat.includes('logistics'))) {
+          score += 15;
+        }
+      }
+
+      // 9. Q16 Primary Motivational Driver (+10 pts) (Q5 Confirmed)
+      const q16 = answers['q16'];
+      if (q16) {
+        if (q16 === 'flexibility' && (biz.timeCommitment === 'lt_10h' || biz.timeCommitment === '10_20h' || biz.category.includes('Digital'))) {
+          score += 10;
+        } else if (q16 === 'stability' && (biz.category === 'Food & Beverage' || biz.category === 'Retail' || biz.riskLevel === 'Low')) {
+          score += 10;
+        } else if (q16 === 'high_growth' && (biz.riskLevel === 'High' || biz.capitalBand === 'above_1m' || biz.capitalBand === '500k_1m')) {
+          score += 10;
+        } else if (q16 === 'low_stress' && biz.riskLevel === 'Low' && biz.timeCommitment !== 'full_time') {
+          score += 10;
+        }
+      }
+
+      // 10. Q17 12-Month Target Income Fit (+10 pts) (Q5 Confirmed)
+      const q17 = answers['q17'];
+      if (q17) {
+        if (q17 === 'under_20k' || q17 === '20k_50k') {
+          if (biz.capitalBand === 'under_10k' || biz.capitalBand === '10k_50k') score += 10;
+        } else if (q17 === '50k_100k') {
+          if (biz.capitalBand === '50k_100k' || biz.capitalBand === '100k_500k') score += 10;
+        } else if (q17 === '100k_250k' || q17 === 'above_250k') {
+          if (biz.capitalBand === '100k_500k' || biz.capitalBand === '500k_1m' || biz.capitalBand === 'above_1m') score += 10;
+        }
       }
 
       // Scale to realistic match percentage (72% to 96%)

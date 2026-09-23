@@ -66,38 +66,55 @@ import { LanguageService } from '../../../core/services/language.service';
             <ul class="space-y-2.5 text-sm">
               <li>
                 <a routerLink="/pathfinder" class="hover:text-gold transition-colors">
-                  Business Pathfinder (v1)
+                  {{ lang.isSwahili() ? 'Anza Biashara (Pathfinder)' : 'Explore Business Pathfinder' }}
                 </a>
               </li>
               <li>
                 <a routerLink="/grow-business" class="hover:text-gold transition-colors">
-                  Business Compass (Grow)
+                  {{ lang.isSwahili() ? 'Kuza Biashara Yangu' : 'Grow My Business' }}
+                </a>
+              </li>
+              <li>
+                <a routerLink="/how-it-works" class="hover:text-gold transition-colors">
+                  {{ lang.t.navHowItWorks }}
                 </a>
               </li>
               <li>
                 <a routerLink="/learn" class="hover:text-gold transition-colors">
-                  Resources & Skills Library
+                  {{ lang.t.navResources }}
                 </a>
               </li>
               <li>
                 <a routerLink="/pricing" class="hover:text-gold transition-colors">
-                  Launch Pricing (KES 499)
+                  {{ lang.t.navPricing }} (KES 499)
                 </a>
               </li>
             </ul>
           </div>
 
-          <!-- Col 4: Platform Vision -->
+          <!-- Col 4: Contact & Community -->
           <div>
             <h4 class="text-xs font-semibold text-gold uppercase tracking-widest mb-4">
-              {{ lang.isSwahili() ? 'Maono ya Baadaye' : 'Platform Roadmap' }}
+              {{ lang.isSwahili() ? 'Wasiliana Nasi' : 'Contact & Support' }}
             </h4>
-            <p class="text-xs text-ivory/60 leading-relaxed mb-3">
-              Compass is part of a 3-product arc (The Jewel Method): Manifestopia → Business Pathfinder → Business Compass.
-            </p>
-            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-pill bg-forest-deep border border-forest-line text-xs text-gold">
-              <span>● Live v1.0 Launch</span>
-            </div>
+            <ul class="space-y-2.5 text-xs text-ivory/70">
+              <li class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-gold flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span>support&#64;compass.africa</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-gold flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span>Nairobi, Kenya</span>
+              </li>
+              <li class="pt-2 text-ivory/60 leading-relaxed">
+                {{ lang.isSwahili() ? 'Imejengwa mahsusi kuwawezesha wajasiriamali wa Kenya na Afrika kufanikiwa.' : 'Built purposefully for Kenyan and African entrepreneurs to launch and grow with confidence.' }}
+              </li>
+            </ul>
           </div>
 
         </div>

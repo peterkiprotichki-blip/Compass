@@ -8,6 +8,7 @@ import { LearnComponent } from './pages/learn/learn.component';
 import { PricingComponent } from './pages/pricing/pricing.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { AdminPortalComponent } from './pages/admin/admin-portal.component';
+import { HowItWorksComponent } from './pages/how-it-works/how-it-works.component';
 
 export const routes: Routes = [
   { path: '', component: LandingPageComponent },
@@ -19,6 +20,6 @@ export const routes: Routes = [
   { path: 'pricing', component: PricingComponent },
   { path: 'profile', component: ProfileComponent },
   { path: 'admin', component: AdminPortalComponent },
-  { path: 'how-it-works', component: LandingPageComponent },
+  { path: 'how-it-works', component: HowItWorksComponent },
   { path: '**', redirectTo: '' }
 ];

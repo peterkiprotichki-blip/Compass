@@ -45,8 +45,12 @@ import confetti from 'canvas-confetti';
       </div>
 
       <!-- Completion Banner when 100% -->
-      <div *ngIf="journey.isCompleted" class="bg-emerald-800/15 border-2 border-emerald-600 rounded-sheet p-6 text-center space-y-2 animate-fadeIn">
-        <span class="text-3xl">🎉</span>
+      <div *ngIf="journey.isCompleted" class="bg-emerald-800/15 border-2 border-emerald-600 rounded-sheet p-6 text-center space-y-3 animate-fadeIn">
+        <div class="w-12 h-12 mx-auto rounded-full bg-emerald-600/20 text-emerald-800 flex items-center justify-center">
+          <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+          </svg>
+        </div>
         <h3 class="font-serif font-bold text-xl text-emerald-900">
           Congratulations! You completed your 30-Day Launch Roadmap!
         </h3>

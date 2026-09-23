@@ -3,16 +3,27 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import { OAuth2Client } from 'google-auth-library';
 import { User, UserDocument } from '../../database/schemas/user.schema';
 
 @Injectable()
 export class AuthService {
+  private googleClient: OAuth2Client;
+
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly jwtService: JwtService,
-  ) {}
+  ) {
+    this.googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || '');
+  }
 
-  async register(data: { name: string; email: string; password?: string; language?: string; country?: string }) {
+  getAuthConfig() {
+    return {
+      googleClientId: process.env.GOOGLE_CLIENT_ID || '',
+    };
+  }
+
+  async register(data: { name: string; email: string; phone?: string; password?: string; language?: string; country?: string }) {
     const existing = await this.userModel.findOne({ email: data.email.toLowerCase() }).exec();
     if (existing) {
       throw new ConflictException('An account with this email already exists');
@@ -24,6 +35,7 @@ export class AuthService {
     const user = new this.userModel({
       name: data.name,
       email: data.email.toLowerCase(),
+      phone: data.phone || null,
       passwordHash,
       language: data.language || 'en',
       country: data.country || 'Kenya',
@@ -38,6 +50,7 @@ export class AuthService {
         id: saved._id,
         name: saved.name,
         email: saved.email,
+        phone: saved.phone,
         role: saved.role || 'user',
         language: saved.language,
         country: saved.country,
@@ -173,17 +186,75 @@ export class AuthService {
     };
   }
 
-  async loginWithGoogle(data: { googleId: string; email: string; name: string; avatarUrl?: string }) {
+  async loginWithGoogle(data: {
+    credential?: string;
+    googleId?: string;
+    email?: string;
+    name?: string;
+    avatarUrl?: string;
+  }) {
+    let googleId = data.googleId;
+    let email = data.email ? data.email.toLowerCase() : undefined;
+    let name = data.name;
+    let avatarUrl = data.avatarUrl;
+
+    if (data.credential) {
+      const clientId = process.env.GOOGLE_CLIENT_ID;
+      try {
+        if (clientId) {
+          const ticket = await this.googleClient.verifyIdToken({
+            idToken: data.credential,
+            audience: clientId,
+          });
+          const payload = ticket.getPayload();
+          if (!payload) {
+            throw new UnauthorizedException('Invalid Google token payload');
+          }
+          const candidateEmail = payload.email || email;
+          email = candidateEmail ? candidateEmail.toLowerCase() : undefined;
+          name = payload.name || name || (email ? email.split('@')[0] : 'User');
+          avatarUrl = payload.picture || avatarUrl;
+        } else {
+          // If GOOGLE_CLIENT_ID is not configured yet (development), extract claims from token payload safely
+          const parts = data.credential.split('.');
+          if (parts.length === 3) {
+            const decoded = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
+            googleId = decoded.sub || googleId;
+            const candidateEmail = decoded.email || email;
+            email = candidateEmail ? candidateEmail.toLowerCase() : undefined;
+            name = decoded.name || name || (email ? email.split('@')[0] : 'User');
+            avatarUrl = decoded.picture || avatarUrl;
+          }
+        }
+      } catch (err: any) {
+        console.error('Failed to verify Google ID token:', err.message);
+        throw new UnauthorizedException(`Failed to verify Google token: ${err.message}`);
+      }
+    }
+
+    if (!email) {
+      throw new UnauthorizedException('A valid email address is required to sign in with Google');
+    }
+
+    if (!googleId) {
+      googleId = 'google_' + Math.abs(email.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0));
+    }
+
+    if (!name) {
+      name = email.split('@')[0].replace(/[._]/g, ' ');
+      name = name.charAt(0).toUpperCase() + name.slice(1);
+    }
+
     let user = await this.userModel.findOne({
-      $or: [{ googleId: data.googleId }, { email: data.email.toLowerCase() }]
+      $or: [{ googleId }, { email }]
     }).exec();
 
     if (!user) {
       user = new this.userModel({
-        name: data.name,
-        email: data.email.toLowerCase(),
-        googleId: data.googleId,
-        avatarUrl: data.avatarUrl,
+        name,
+        email,
+        googleId,
+        avatarUrl,
         authProvider: 'google',
         role: 'user',
         language: 'en',
@@ -192,9 +263,22 @@ export class AuthService {
       });
       await user.save();
     } else {
-      if (!user.googleId) user.googleId = data.googleId;
-      if (data.avatarUrl) user.avatarUrl = data.avatarUrl;
-      await user.save();
+      let updated = false;
+      if (!user.googleId) {
+        user.googleId = googleId;
+        updated = true;
+      }
+      if (avatarUrl && (!user.avatarUrl || user.avatarUrl.includes('dicebear'))) {
+        user.avatarUrl = avatarUrl;
+        updated = true;
+      }
+      if (user.authProvider !== 'google' && !user.authProvider) {
+        user.authProvider = 'google';
+        updated = true;
+      }
+      if (updated) {
+        await user.save();
+      }
     }
 
     const token = this.generateToken(user);

@@ -7,7 +7,7 @@ export class AuthController {
 
   @Post('register')
   async register(
-    @Body() body: { name: string; email: string; password?: string; language?: string; country?: string },
+    @Body() body: { name: string; email: string; phone?: string; password?: string; language?: string; country?: string },
   ) {
     return this.authService.register(body);
   }
@@ -27,9 +27,14 @@ export class AuthController {
     return this.authService.resend2FA(body.userId, body.channel || 'email');
   }
 
+  @Get('config')
+  async getAuthConfig() {
+    return this.authService.getAuthConfig();
+  }
+
   @Post('google')
   async loginGoogle(
-    @Body() body: { googleId: string; email: string; name: string; avatarUrl?: string },
+    @Body() body: { credential?: string; googleId?: string; email?: string; name?: string; avatarUrl?: string },
   ) {
     return this.authService.loginWithGoogle(body);
   }

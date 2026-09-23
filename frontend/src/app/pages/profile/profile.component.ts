@@ -6,11 +6,12 @@ import { AuthService } from '../../core/services/auth.service';
 import { ApiService } from '../../core/services/api.service';
 import { LanguageService } from '../../core/services/language.service';
 import { Journey, Business } from '../../models/compass.models';
+import { GoogleSignInComponent } from '../../shared/components/google-sign-in/google-sign-in.component';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, GoogleSignInComponent],
   template: `
     <div class="min-h-screen bg-ivory py-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-10">
       
@@ -18,7 +19,10 @@ import { Journey, Business } from '../../models/compass.models';
       <div class="bg-forest rounded-sheet p-8 text-ivory border border-forest-line shadow-lg flex flex-col sm:flex-row items-center justify-between gap-6">
         <div class="flex items-center gap-4">
           <div class="w-16 h-16 rounded-full bg-forest-deep border-2 border-gold flex items-center justify-center font-serif font-bold text-2xl text-gold">
-            {{ auth.currentUser() ? auth.currentUser()!.name.charAt(0).toUpperCase() : '👤' }}
+            <span *ngIf="auth.currentUser()">{{ auth.currentUser()!.name.charAt(0).toUpperCase() }}</span>
+            <svg *ngIf="!auth.currentUser()" class="w-8 h-8 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
           </div>
           <div>
             <h1 class="text-2xl font-serif font-bold text-ivory">
@@ -148,9 +152,25 @@ import { Journey, Business } from '../../models/compass.models';
             <h3 class="font-serif font-bold text-xl text-charcoal">
               {{ isRegisterMode ? (lang.isSwahili() ? 'Fungua Akaunti' : 'Create Account') : (lang.isSwahili() ? 'Karibu Tena' : 'Welcome Back') }}
             </h3>
-            <button (click)="showAuthModal = false" class="text-charcoal/50 hover:text-charcoal text-lg font-bold">
-              ✕
+            <button (click)="showAuthModal = false" class="text-charcoal/50 hover:text-charcoal p-1 rounded-full hover:bg-forest-line/10 transition-colors">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
+          <div class="space-y-3">
+            <app-google-sign-in
+              [text]="isRegisterMode ? 'signup_with' : 'signin_with'"
+              (signedIn)="onGoogleSuccess()"
+              (signInError)="authError = $event?.message || 'Google authentication failed'"
+            ></app-google-sign-in>
+
+            <div class="flex items-center my-2">
+              <div class="flex-grow border-t border-forest-line/10"></div>
+              <span class="px-3 text-xs text-charcoal/40 uppercase font-semibold">
+                {{ lang.isSwahili() ? 'Au tumia barua pepe' : 'Or use email' }}
+              </span>
+              <div class="flex-grow border-t border-forest-line/10"></div>
+            </div>
           </div>
 
           <form (submit)="onAuthSubmit($event)" class="space-y-4">
@@ -260,5 +280,11 @@ export class ProfileComponent implements OnInit {
         error: err => this.authError = err.error?.message || 'Login failed'
       });
     }
+  }
+
+  onGoogleSuccess() {
+    this.showAuthModal = false;
+    this.authError = '';
+    this.loadUserData();
   }
 }

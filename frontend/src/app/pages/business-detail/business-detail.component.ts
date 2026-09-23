@@ -115,7 +115,9 @@ import { WeekBlockComponent } from '../../shared/components/week-block/week-bloc
         
         <div class="bg-white rounded-sheet p-6 border border-forest-line/15 shadow-light-sm space-y-4">
           <h3 class="font-serif font-bold text-lg text-charcoal flex items-center gap-2">
-            <span>✨</span>
+            <svg class="w-5 h-5 text-gold flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            </svg>
             <span>{{ lang.isSwahili() ? 'Faida Kuu za Kimkakati' : 'Strategic Advantages' }}</span>
           </h3>
           <div class="space-y-3 text-xs text-charcoal/80">
@@ -142,7 +144,9 @@ import { WeekBlockComponent } from '../../shared/components/week-block/week-bloc
 
         <div class="bg-white rounded-sheet p-6 border border-forest-line/15 shadow-light-sm space-y-4">
           <h3 class="font-serif font-bold text-lg text-charcoal flex items-center gap-2">
-            <span>🛡️</span>
+            <svg class="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
             <span>{{ lang.isSwahili() ? 'Udhibiti wa Hatari' : 'Risk Management' }}</span>
           </h3>
           <div class="space-y-3 text-xs text-charcoal/80">

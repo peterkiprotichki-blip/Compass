@@ -80,10 +80,60 @@ export class ApiService {
     userId?: string;
     businessType: string;
     operatingDuration: string;
-    monthlySalesRange: string;
+    originalInvestment?: string;
+    peopleCount?: string;
     biggestChallenge: string;
+    mostLikeToImprove?: string;
+    financialTrackingAbility?: string;
+    optionalFinancials?: any;
+    monthlySalesRange?: string;
   }): Observable<any> {
     return this.http.post(`${this.baseUrl}/growth/intake`, payload);
+  }
+
+  getGrowIntake(id: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/growth/intake/${id}`);
+  }
+
+  getRecentIntakes(userId?: string): Observable<any[]> {
+    const url = userId ? `${this.baseUrl}/growth/recent?userId=${encodeURIComponent(userId)}` : `${this.baseUrl}/growth/recent`;
+    return this.http.get<any[]>(url);
+  }
+
+  recordDailyTracking(
+    id: string,
+    payload: {
+      date: string;
+      sales: number;
+      expenses: number;
+      itemsSold?: Array<{ itemName: string; quantity: number; sellingPrice: number; subtotal: number }>;
+      notes?: string;
+    },
+  ): Observable<any> {
+    return this.http.post(`${this.baseUrl}/growth/intake/${id}/daily`, payload);
+  }
+
+  addStockItem(
+    id: string,
+    item: { name: string; quantity: number; buyingPrice: number; sellingPrice: number },
+  ): Observable<any> {
+    return this.http.post(`${this.baseUrl}/growth/intake/${id}/stock`, item);
+  }
+
+  updateStockItem(
+    id: string,
+    itemId: string,
+    update: { name?: string; quantity?: number; buyingPrice?: number; sellingPrice?: number },
+  ): Observable<any> {
+    return this.http.patch(`${this.baseUrl}/growth/intake/${id}/stock/${itemId}`, update);
+  }
+
+  deleteStockItem(id: string, itemId: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/growth/intake/${id}/stock/${itemId}`);
+  }
+
+  unlockGrowPremium(id: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/growth/intake/${id}/unlock`, {});
   }
 
   toggleSavePath(userId: string, businessSlug: string): Observable<{ savedPaths: string[] }> {
@@ -100,7 +150,7 @@ export class ApiService {
     });
   }
 
-  loginWithGoogle(payload: { googleId: string; email: string; name: string; avatarUrl?: string }): Observable<any> {
+  loginWithGoogle(payload: { credential?: string; googleId?: string; email?: string; name?: string; avatarUrl?: string }): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/auth/google`, payload);
   }
 

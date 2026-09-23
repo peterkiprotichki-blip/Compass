@@ -12,7 +12,7 @@ export interface AiRecommendationInsight {
 export class GeminiService {
   private readonly logger = new Logger(GeminiService.name);
   private aiClient: GoogleGenAI | null = null;
-  private readonly modelName = 'gemini-3.6-flash';
+  private readonly modelName = 'gemini-2.5-flash';
 
   constructor() {
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY;

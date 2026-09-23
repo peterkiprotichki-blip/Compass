@@ -148,9 +148,9 @@ import { ScoreRingComponent } from '../../shared/components/score-ring/score-rin
           <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             
             <div class="p-3">
-              <p class="font-serif text-3xl sm:text-4xl font-bold text-gold">10K+</p>
+              <p class="font-serif text-3xl sm:text-4xl font-bold text-gold">KE</p>
               <p class="text-xs sm:text-sm text-ivory/70 mt-1 uppercase tracking-wider font-semibold">
-                {{ lang.isSwahili() ? 'Wajasiriamali Walioongozwa' : 'Entrepreneurs Guided' }}
+                {{ lang.isSwahili() ? 'Imejengwa kwa Wakenya' : 'Built for Kenyan Founders' }}
               </p>
             </div>
 
@@ -222,8 +222,11 @@ import { ScoreRingComponent } from '../../shared/components/score-ring/score-rin
           <!-- Card 1: Start My Business (Pathfinder) -->
           <div class="bg-white rounded-sheet p-8 border border-forest-line/15 shadow-light-lg hover:border-gold transition-all duration-300 flex flex-col justify-between group">
             <div class="space-y-4">
-              <div class="w-14 h-14 rounded-full bg-forest text-gold flex items-center justify-center text-2xl shadow-sm">
-                🌱
+              <div class="w-14 h-14 rounded-full bg-forest text-gold flex items-center justify-center shadow-sm">
+                <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                  <polygon points="12 7 16.5 16.5 7.5 16.5" fill="currentColor" opacity="0.8" />
+                </svg>
               </div>
               <h3 class="text-2xl font-serif font-bold text-charcoal group-hover:text-forest transition-colors">
                 {{ lang.t.btnStartMyBusiness }}
@@ -255,8 +258,10 @@ import { ScoreRingComponent } from '../../shared/components/score-ring/score-rin
           <!-- Card 2: Grow My Business (Business Compass) -->
           <div class="bg-white rounded-sheet p-8 border border-forest-line/15 shadow-light-lg hover:border-forest transition-all duration-300 flex flex-col justify-between group">
             <div class="space-y-4">
-              <div class="w-14 h-14 rounded-full bg-forest text-gold flex items-center justify-center text-2xl shadow-sm">
-                📈
+              <div class="w-14 h-14 rounded-full bg-forest text-gold flex items-center justify-center shadow-sm">
+                <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
               </div>
               <h3 class="text-2xl font-serif font-bold text-charcoal group-hover:text-forest transition-colors">
                 {{ lang.t.btnGrowMyBusiness }}

@@ -172,6 +172,8 @@ export interface UserProfile {
   language: string;
   country: string;
   savedPaths: string[];
+  avatarUrl?: string;
+  authProvider?: string;
 }
 
 export interface AdminKpiStats {
