@@ -337,16 +337,6 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
             </div>
           </div>
 
-          <!-- Skip / Guest Option -->
-          <div class="text-center pt-2">
-            <button
-              (click)="startQuestionsAfterAuth()"
-              class="text-xs text-charcoal/60 hover:text-charcoal underline"
-            >
-              {{ lang.isSwahili() ? 'Endelea kama mgeni kwa sasa' : 'Skip for now and continue as guest' }}
-            </button>
-          </div>
-
           <!-- Switch to Grow Business -->
           <div class="text-center pt-3 border-t border-forest-line/10 mt-2">
             <a
@@ -983,6 +973,10 @@ export class PathfinderWizardComponent implements OnInit {
   }
 
   goToScreen(screen: FlowScreen) {
+    if (screen === 'QUESTIONS' && !this.auth.currentUser()) {
+      this.currentScreen = 'ACCOUNT_GATE';
+      return;
+    }
     this.currentScreen = screen;
   }
 
@@ -999,6 +993,10 @@ export class PathfinderWizardComponent implements OnInit {
   }
 
   startQuestionsAfterAuth() {
+    if (!this.auth.currentUser()) {
+      this.goToScreen('ACCOUNT_GATE');
+      return;
+    }
     this.currentQuestionIndex = 0;
     this.currentScreen = 'QUESTIONS';
   }
