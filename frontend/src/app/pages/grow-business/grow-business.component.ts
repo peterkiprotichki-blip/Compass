@@ -6,6 +6,8 @@ import { ApiService } from '../../core/services/api.service';
 import { LanguageService } from '../../core/services/language.service';
 import { AuthService } from '../../core/services/auth.service';
 
+import { GoogleSignInComponent } from '../../shared/components/google-sign-in/google-sign-in.component';
+
 interface ItemSoldDraft {
   itemName: string;
   quantity: number;
@@ -15,7 +17,7 @@ interface ItemSoldDraft {
 @Component({
   selector: 'app-grow-business',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, GoogleSignInComponent],
   template: `
     <div class="min-h-screen bg-ivory py-10 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-8">
       
@@ -37,7 +39,7 @@ interface ItemSoldDraft {
         </div>
 
         <!-- Mode / Switcher if profile exists -->
-        <div *ngIf="activeProfile" class="flex items-center gap-3">
+        <div *ngIf="auth.currentUser() && activeProfile" class="flex items-center gap-3">
           <span 
             class="px-3 py-1 rounded-pill text-xs font-bold uppercase tracking-wider"
             [ngClass]="activeProfile.isUnlocked ? 'bg-gold text-forest-deep' : 'bg-forest-line/20 text-charcoal'"
@@ -53,8 +55,121 @@ interface ItemSoldDraft {
         </div>
       </div>
 
+      <!-- ================= 0. MANDATORY AUTHENTICATION GATE ================= -->
+      <div *ngIf="!auth.currentUser()" class="max-w-md mx-auto bg-white rounded-sheet border border-forest-line/15 shadow-xl p-6 sm:p-10 space-y-6 text-center animate-fadeIn my-6">
+        <div class="w-12 h-12 mx-auto rounded-full bg-forest text-gold flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          </svg>
+        </div>
+
+        <div class="space-y-2">
+          <h2 class="text-2xl font-serif font-bold text-charcoal">
+            {{ isLoginMode 
+              ? (lang.isSwahili() ? 'Ingia Kukuza Biashara Yako' : 'Sign In to Diagnose & Scale') 
+              : (lang.isSwahili() ? 'Fungua Akaunti Kuanza Utatuzi' : 'Create Account to Diagnose & Scale') 
+            }}
+          </h2>
+          <p class="text-xs text-charcoal/65">
+            {{ lang.isSwahili()
+              ? 'Tafadhali ingia au jisajili ili uweze kuanza uchunguzi wa biashara, kuhifadhi mahesabu ya mauzo na kufungua mwongozo wa hatua kwa hatua.'
+              : 'Please sign in or create an account to start your business diagnosis, track sales and unlock operational playbooks.'
+            }}
+          </p>
+        </div>
+
+        <!-- Google 1-Click Authentication -->
+        <div class="space-y-3">
+          <app-google-sign-in
+            [text]="isLoginMode ? 'signin_with' : 'signup_with'"
+            (signedIn)="onAuthSuccess()"
+            (signInError)="authError = $event?.message || 'Google sign in failed'"
+          ></app-google-sign-in>
+
+          <div class="flex items-center my-3">
+            <div class="flex-grow border-t border-forest-line/15"></div>
+            <span class="px-3 text-[11px] text-charcoal/40 uppercase font-bold tracking-wider">
+              {{ lang.isSwahili() ? 'Au tumia barua pepe' : 'Or continue with email' }}
+            </span>
+            <div class="flex-grow border-t border-forest-line/15"></div>
+          </div>
+        </div>
+
+        <!-- Email & Password Form -->
+        <form (submit)="onAuthSubmit($event)" class="space-y-3.5 text-left">
+          <div *ngIf="!isLoginMode" class="space-y-1">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-charcoal">
+              {{ lang.isSwahili() ? 'Jina Kamili' : 'Full Name' }} *
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="authForm.name"
+              name="name"
+              class="w-full p-3 rounded-button border bg-ivory text-sm focus:outline-none focus:border-gold"
+              [placeholder]="lang.isSwahili() ? 'mfano: Wangari Mwangi' : 'e.g. Wangari Mwangi'"
+              [required]="!isLoginMode"
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-charcoal">
+              {{ lang.isSwahili() ? 'Barua Pepe' : 'Email Address' }} *
+            </label>
+            <input
+              type="email"
+              [(ngModel)]="authForm.email"
+              name="email"
+              class="w-full p-3 rounded-button border bg-ivory text-sm focus:outline-none focus:border-gold"
+              placeholder="you@gmail.com"
+              required
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-charcoal">
+              {{ lang.isSwahili() ? 'Nenosiri' : 'Password' }} *
+            </label>
+            <input
+              type="password"
+              [(ngModel)]="authForm.password"
+              name="password"
+              class="w-full p-3 rounded-button border bg-ivory text-sm focus:outline-none focus:border-gold"
+              [placeholder]="lang.isSwahili() ? 'Weka nenosiri' : 'Enter password'"
+              required
+            />
+          </div>
+
+          <div *ngIf="authError" class="p-3 rounded-button bg-red-50 border border-red-200 text-xs text-rose-700 font-semibold">
+            {{ authError }}
+          </div>
+
+          <button
+            type="submit"
+            class="w-full bg-gold hover:bg-gold-soft text-charcoal font-bold text-sm py-3.5 rounded-button shadow transition-all"
+          >
+            {{ isLoginMode
+              ? (lang.isSwahili() ? 'Ingia & Anza Utatuzi →' : 'Sign In & Begin Diagnosis →')
+              : (lang.isSwahili() ? 'Fungua Akaunti & Anza Utatuzi →' : 'Create Account & Begin Diagnosis →')
+            }}
+          </button>
+        </form>
+
+        <div class="text-center pt-1 border-t border-forest-line/10">
+          <button
+            type="button"
+            (click)="isLoginMode = !isLoginMode; authError = ''"
+            class="text-xs text-forest hover:text-gold font-semibold transition-colors"
+          >
+            {{ isLoginMode
+              ? (lang.isSwahili() ? 'Huna akaunti bado? Jisajili hapa' : 'Don\'t have an account? Sign up here')
+              : (lang.isSwahili() ? 'Tayari una akaunti? Ingia hapa' : 'Already have an account? Sign in here')
+            }}
+          </button>
+        </div>
+      </div>
+
       <!-- ================= 1. REVISED ONBOARDING FLOW ================= -->
-      <div *ngIf="!activeProfile" class="bg-white rounded-sheet border border-forest-line/15 shadow-light-md p-6 sm:p-10 space-y-8">
+      <div *ngIf="auth.currentUser() && !activeProfile" class="bg-white rounded-sheet border border-forest-line/15 shadow-light-md p-6 sm:p-10 space-y-8">
         
         <div class="border-b border-forest-line/10 pb-4">
           <h2 class="text-xl font-serif font-bold text-charcoal">
@@ -1077,6 +1192,14 @@ export class GrowBusinessComponent implements OnInit {
   lang = inject(LanguageService);
   auth = inject(AuthService);
 
+  isLoginMode = false;
+  authError = '';
+  authForm = {
+    name: '',
+    email: '',
+    password: ''
+  };
+
   loading = false;
   savingDaily = false;
   savingStock = false;
@@ -1137,6 +1260,56 @@ export class GrowBusinessComponent implements OnInit {
 
   ngOnInit() {
     this.checkExistingProfile();
+  }
+
+  onAuthSuccess() {
+    this.authError = '';
+    this.checkExistingProfile();
+  }
+
+  onAuthSubmit(e: Event) {
+    e.preventDefault();
+    this.authError = '';
+
+    if (!this.authForm.email || !this.authForm.password) {
+      this.authError = this.lang.isSwahili() ? 'Tafadhali jaza barua pepe na nenosiri' : 'Please fill in email and password';
+      return;
+    }
+
+    if (this.isLoginMode) {
+      this.auth.login(this.authForm.email, this.authForm.password).subscribe({
+        next: () => {
+          this.onAuthSuccess();
+        },
+        error: (err: any) => {
+          this.authError = err.error?.message || (this.lang.isSwahili() ? 'Hitilafu wakati wa kuingia. Tafadhali thibitisha taarifa zako.' : 'Login failed. Please check your credentials.');
+        }
+      });
+    } else {
+      if (!this.authForm.name) {
+        this.authError = this.lang.isSwahili() ? 'Tafadhali jaza jina lako kamili' : 'Please enter your full name';
+        return;
+      }
+      this.auth.register({
+        name: this.authForm.name,
+        email: this.authForm.email,
+        password: this.authForm.password,
+        language: this.lang.currentLang(),
+      }).subscribe({
+        next: () => {
+          this.onAuthSuccess();
+        },
+        error: (err: any) => {
+          // If already registered, try logging in
+          this.auth.login(this.authForm.email, this.authForm.password).subscribe({
+            next: () => this.onAuthSuccess(),
+            error: () => {
+              this.authError = err.error?.message || (this.lang.isSwahili() ? 'Hitilafu wakati wa kusajili. Jaribu tena.' : 'Registration failed. Please try again.');
+            }
+          });
+        }
+      });
+    }
   }
 
   checkExistingProfile() {

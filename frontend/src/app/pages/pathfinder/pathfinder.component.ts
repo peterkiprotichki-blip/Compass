@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { LanguageService, LanguageCode } from '../../core/services/language.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -176,7 +176,7 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
             <div
-              (click)="startQuestions()"
+              (click)="onChooseJourney('START')"
               class="bg-white p-6 rounded-sheet border-2 border-gold shadow-light-md cursor-pointer hover:scale-[1.02] transition-transform space-y-3"
             >
               <div class="w-10 h-10 rounded-full bg-forest text-gold flex items-center justify-center">
@@ -193,13 +193,13 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
               </p>
               <div class="pt-2">
                 <span class="text-xs font-bold text-forest flex items-center gap-1">
-                  Start Pathfinder →
+                  {{ lang.isSwahili() ? 'Anza Tathmini →' : 'Start Pathfinder →' }}
                 </span>
               </div>
             </div>
 
             <div
-              (click)="router.navigate(['/grow-business'])"
+              (click)="onChooseJourney('GROW')"
               class="bg-white p-6 rounded-sheet border border-forest/20 shadow-light-sm cursor-pointer hover:scale-[1.02] transition-transform space-y-3"
             >
               <div class="w-10 h-10 rounded-full bg-ivory-sunk text-forest flex items-center justify-center">
@@ -215,7 +215,7 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
               </p>
               <div class="pt-2">
                 <span class="text-xs font-bold text-charcoal/60 flex items-center gap-1">
-                  Diagnostics →
+                  {{ lang.isSwahili() ? 'Fanya Utatuzi →' : 'Diagnose & Scale →' }}
                 </span>
               </div>
             </div>
@@ -229,11 +229,16 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
       <div *ngIf="currentScreen === 'ACCOUNT_GATE'" class="min-h-screen flex flex-col justify-center items-center p-6 bg-ivory animate-fadeIn">
         <div class="w-full max-w-md bg-white p-6 sm:p-10 rounded-sheet border border-forest-line/15 shadow-light-lg space-y-6">
           
-          <!-- Top Bar: Step & Language Toggle -->
+          <!-- Top Bar: Back to Journey & Language Toggle -->
           <div class="flex items-center justify-between pb-2 border-b border-forest-line/10">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-gold">
-              {{ lang.isSwahili() ? 'Hatua ya 1 kati ya 2' : 'Step 1 of 2: Profile' }}
-            </span>
+            <button
+              (click)="goToScreen('JOURNEY')"
+              type="button"
+              class="text-xs font-semibold text-charcoal/60 hover:text-gold flex items-center gap-1 transition-colors"
+            >
+              <span>←</span>
+              <span>{{ lang.isSwahili() ? 'Badili chaguo' : 'Back' }}</span>
+            </button>
             <button
               (click)="lang.toggleLanguage()"
               type="button"
@@ -247,20 +252,25 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
 
           <div class="text-center space-y-2">
             <div class="w-12 h-12 mx-auto rounded-full bg-forest text-gold flex items-center justify-center">
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <svg *ngIf="selectedJourneyType === 'START'" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <svg *ngIf="selectedJourneyType === 'GROW'" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
             </div>
             <h2 class="text-2xl font-serif font-bold text-charcoal">
-              {{ isLoginMode 
-                ? (lang.isSwahili() ? 'Karibu Tena kwenye Compass' : 'Welcome Back to Compass') 
-                : (lang.isSwahili() ? 'Tengeneza Wasifu Wako Kuanza' : 'Create Your Profile to Get Started') 
+              {{ selectedJourneyType === 'GROW'
+                ? (isLoginMode ? (lang.isSwahili() ? 'Ingia Kukuza Biashara Yako' : 'Sign In to Diagnose & Scale') : (lang.isSwahili() ? 'Fungua Akaunti Kukuza Biashara' : 'Create Account to Diagnose & Scale'))
+                : (isLoginMode ? (lang.isSwahili() ? 'Karibu Tena kwenye Compass' : 'Welcome Back to Compass') : (lang.isSwahili() ? 'Tengeneza Wasifu Wako Kuanza' : 'Create Your Profile to Get Started'))
               }}
             </h2>
             <p class="text-xs text-charcoal/65">
-              {{ isLoginMode
-                ? (lang.isSwahili() ? 'Ingia ili kuendelea na safari yako na kufungua mapendekezo yako.' : 'Log in to continue your assessment and view your personalized roadmap.')
-                : (lang.isSwahili() ? 'Weka taarifa zako ili tuhifadhi majibu yako, tathmini ya nguvu na mwongozo wa siku 30.' : 'Save your progress upfront, track your strengths, and secure your personalized 30-day action plan.')
+              {{ selectedJourneyType === 'GROW'
+                ? (lang.isSwahili() ? 'Weka taarifa zako au ingia na Google ili kuanza utatuzi, kuhifadhi mahesabu ya mauzo na kufungua mwongozo wa kukuza biashara.' : 'Sign in or create your profile to start your business diagnosis, track daily profit, and scale operations.')
+                : (isLoginMode
+                  ? (lang.isSwahili() ? 'Ingia ili kuendelea na safari yako na kufungua mapendekezo yako.' : 'Log in to continue your assessment and view your personalized roadmap.')
+                  : (lang.isSwahili() ? 'Weka taarifa zako ili tuhifadhi majibu yako, tathmini ya nguvu na mwongozo wa siku 30.' : 'Save your progress upfront, track your strengths, and secure your personalized 30-day action plan.'))
               }}
             </p>
           </div>
@@ -926,8 +936,10 @@ export class PathfinderWizardComponent implements OnInit {
   lang = inject(LanguageService);
   auth = inject(AuthService);
   router = inject(Router);
+  route = inject(ActivatedRoute);
 
-  currentScreen: FlowScreen = 'ACCOUNT_GATE';
+  selectedJourneyType: 'START' | 'GROW' = 'START';
+  currentScreen: FlowScreen = 'JOURNEY';
   isLoadingQuestions = true;
   questions: QuestionDefinition[] = [];
   currentQuestionIndex = 0;
@@ -949,12 +961,45 @@ export class PathfinderWizardComponent implements OnInit {
 
   ngOnInit() {
     this.loadQuestions();
-    // Start immediately on Question 1 if logged in, or upfront profile creation if new visitor.
-    // Eliminates the redundant splash screen so users only click "Start" once.
-    if (this.auth.currentUser()) {
-      this.currentScreen = 'QUESTIONS';
+    this.route.queryParams.subscribe(params => {
+      if (params['target'] === 'grow') {
+        this.selectedJourneyType = 'GROW';
+        if (!this.auth.currentUser()) {
+          this.currentScreen = 'ACCOUNT_GATE';
+        } else {
+          this.router.navigate(['/grow-business']);
+        }
+      } else if (params['target'] === 'start') {
+        this.selectedJourneyType = 'START';
+        if (!this.auth.currentUser()) {
+          this.currentScreen = 'ACCOUNT_GATE';
+        } else {
+          this.startQuestionsAfterAuth();
+        }
+      } else {
+        this.currentScreen = 'JOURNEY';
+      }
+    });
+  }
+
+  onChooseJourney(type: 'START' | 'GROW') {
+    this.selectedJourneyType = type;
+    if (!this.auth.currentUser()) {
+      this.goToScreen('ACCOUNT_GATE');
+      return;
+    }
+    if (type === 'GROW') {
+      this.router.navigate(['/grow-business']);
     } else {
-      this.currentScreen = 'ACCOUNT_GATE';
+      this.startQuestionsAfterAuth();
+    }
+  }
+
+  afterAuthenticationSuccess() {
+    if (this.selectedJourneyType === 'GROW') {
+      this.router.navigate(['/grow-business']);
+    } else {
+      this.startQuestionsAfterAuth();
     }
   }
 
@@ -1084,7 +1129,7 @@ export class PathfinderWizardComponent implements OnInit {
     if (user?.email && !this.accountForm.email) {
       this.accountForm.email = user.email;
     }
-    this.startQuestionsAfterAuth();
+    this.afterAuthenticationSuccess();
   }
 
   onGoogleSignInError(err: any) {
@@ -1097,7 +1142,7 @@ export class PathfinderWizardComponent implements OnInit {
 
     if (this.isLoginMode) {
       this.auth.login(this.accountForm.email, this.accountForm.password).subscribe({
-        next: () => this.startQuestionsAfterAuth(),
+        next: () => this.afterAuthenticationSuccess(),
         error: (err: any) => {
           console.error(err);
           alert(this.lang.isSwahili() ? 'Hitilafu wakati wa kuingia' : 'Invalid email or password');
@@ -1116,13 +1161,13 @@ export class PathfinderWizardComponent implements OnInit {
       language: this.lang.currentLang(),
     }).subscribe({
       next: () => {
-        this.startQuestionsAfterAuth();
+        this.afterAuthenticationSuccess();
       },
       error: () => {
         // Fallback: If user already exists, attempt login
         this.auth.login(this.accountForm.email, this.accountForm.password).subscribe({
-          next: () => this.startQuestionsAfterAuth(),
-          error: () => this.startQuestionsAfterAuth(),
+          next: () => this.afterAuthenticationSuccess(),
+          error: () => this.afterAuthenticationSuccess(),
         });
       }
     });
