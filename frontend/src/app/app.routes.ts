@@ -9,9 +9,13 @@ import { PricingComponent } from './pages/pricing/pricing.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { AdminPortalComponent } from './pages/admin/admin-portal.component';
 import { HowItWorksComponent } from './pages/how-it-works/how-it-works.component';
+import { LoginComponent } from './pages/login/login.component';
 
 export const routes: Routes = [
   { path: '', component: LandingPageComponent },
+  { path: 'login', component: LoginComponent },
+  { path: 'signin', component: LoginComponent },
+  { path: 'signup', component: LoginComponent },
   { path: 'pathfinder', component: PathfinderWizardComponent },
   { path: 'business/:slug', component: BusinessDetailPageComponent },
   { path: 'journey/:id', component: JourneyTrackerPageComponent },

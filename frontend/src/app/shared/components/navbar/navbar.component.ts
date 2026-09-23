@@ -134,14 +134,27 @@ import { GoogleSignInComponent } from '../google-sign-in/google-sign-in.componen
               </div>
             </div>
 
-            <!-- User Auth: Logged Out "Sign In" Button -->
+            <!-- Direct Quick Sign Out Button when Logged In -->
             <button
+              *ngIf="auth.currentUser()"
+              (click)="logout()"
+              class="hidden sm:inline-flex items-center text-xs text-rose-300 hover:text-rose-100 hover:bg-rose-500/20 px-2.5 py-1.5 rounded-button border border-rose-400/30 transition-colors"
+              title="Sign Out"
+            >
+              <svg class="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span>{{ lang.isSwahili() ? 'Toka' : 'Sign Out' }}</span>
+            </button>
+
+            <!-- User Auth: Logged Out "Sign In" Button -->
+            <a
               *ngIf="!auth.currentUser()"
-              (click)="showAuthModal = true; isRegisterMode = false"
-              class="hidden sm:inline-flex items-center text-xs font-semibold text-ivory hover:text-gold px-3 py-2 rounded-button border border-forest-line hover:border-gold transition-colors"
+              routerLink="/login"
+              class="inline-flex items-center text-xs font-semibold text-ivory hover:text-gold px-3.5 py-2 rounded-button border border-forest-line hover:border-gold transition-colors"
             >
               {{ lang.isSwahili() ? 'Ingia' : 'Sign In' }}
-            </button>
+            </a>
 
             <!-- Primary Action Button -->
             <a
@@ -217,12 +230,13 @@ import { GoogleSignInComponent } from '../google-sign-in/google-sign-in.componen
 
         <!-- Sign In Button for Mobile if logged out -->
         <div *ngIf="!auth.currentUser()" class="pt-2">
-          <button
-            (click)="mobileMenuOpen = false; showAuthModal = true; isRegisterMode = false"
-            class="w-full flex items-center justify-center border border-gold text-gold hover:bg-gold/10 font-semibold py-2.5 rounded-button transition-colors text-sm"
+          <a
+            (click)="mobileMenuOpen = false"
+            routerLink="/login"
+            class="w-full flex items-center justify-center border border-gold text-gold hover:bg-gold/10 font-bold py-2.5 rounded-button transition-colors text-sm"
           >
             {{ lang.isSwahili() ? 'Ingia / Fungua Akaunti' : 'Sign In / Register' }}
-          </button>
+          </a>
         </div>
 
         <div class="pt-1">
@@ -364,5 +378,6 @@ export class NavbarComponent {
     this.auth.logout();
     this.userMenuOpen = false;
     this.mobileMenuOpen = false;
+    this.router.navigate(['/login']);
   }
 }

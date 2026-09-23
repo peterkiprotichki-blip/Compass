@@ -45,18 +45,21 @@ import { GoogleSignInComponent } from '../../shared/components/google-sign-in/go
           </a>
           <button
             *ngIf="auth.currentUser()"
-            (click)="auth.logout()"
-            class="text-xs font-semibold px-4 py-2 rounded-button border border-forest-line text-ivory/80 hover:text-ivory"
+            (click)="onSignOut()"
+            class="text-xs font-semibold px-4 py-2 rounded-button border border-rose-400/40 text-rose-300 hover:text-rose-200 hover:bg-rose-500/10 transition-colors flex items-center gap-1.5"
           >
-            Sign Out
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            <span>{{ lang.isSwahili() ? 'Toka' : 'Sign Out' }}</span>
           </button>
-          <button
+          <a
             *ngIf="!auth.currentUser()"
-            (click)="showAuthModal = true"
-            class="bg-gold hover:bg-gold-soft text-charcoal text-xs font-semibold px-5 py-2.5 rounded-button shadow transition-colors"
+            routerLink="/login"
+            class="bg-gold hover:bg-gold-soft text-charcoal text-xs font-bold px-5 py-2.5 rounded-button shadow transition-colors"
           >
-            Save Account / Sign In
-          </button>
+            {{ lang.isSwahili() ? 'Ingia / Fungua Akaunti' : 'Sign In / Create Account' }}
+          </a>
         </div>
       </div>
 
@@ -286,5 +289,12 @@ export class ProfileComponent implements OnInit {
     this.showAuthModal = false;
     this.authError = '';
     this.loadUserData();
+  }
+
+  onSignOut() {
+    this.auth.logout();
+    this.savedBusinesses = [];
+    this.journeys = [];
+    this.router.navigate(['/login']);
   }
 }
