@@ -163,7 +163,7 @@ import { ScoreRingComponent } from '../../shared/components/score-ring/score-rin
             </div>
 
             <div class="p-3 border-l border-forest-line/50">
-              <p class="font-serif text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gold-light via-gold to-gold-soft">30+</p>
+              <p class="font-serif text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gold-light via-gold to-gold-soft">100+</p>
               <p class="text-xs sm:text-sm text-ivory/75 mt-1 uppercase tracking-wider font-semibold">
                 {{ lang.isSwahili() ? 'Mifumo ya Biashara za Kiafrika' : 'African Business Models' }}
               </p>

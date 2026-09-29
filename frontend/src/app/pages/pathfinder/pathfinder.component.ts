@@ -593,19 +593,10 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
               </div>
 
               <div class="flex items-center gap-2 ml-auto">
-                <button
-                  *ngIf="!currentQuestion.type || currentQuestion.type === 'single'"
-                  type="button"
-                  (click)="autoAdvanceEnabled = !autoAdvanceEnabled"
-                  class="text-[11px] text-charcoal/60 hover:text-charcoal flex items-center gap-1.5 transition-colors"
-                  title="Toggle auto-advance on selection"
-                >
-                  <span class="w-3.5 h-3.5 rounded border flex items-center justify-center text-[9px]"
-                    [ngClass]="autoAdvanceEnabled ? 'bg-gold border-gold text-charcoal font-bold' : 'border-forest-line/40'">
-                    {{ autoAdvanceEnabled ? '✓' : '' }}
-                  </span>
-                  <span>{{ lang.isSwahili() ? 'Endelea kiotomatiki' : 'Auto-advance' }}</span>
-                </button>
+                <span class="inline-flex items-center gap-1.5 text-[11px] text-forest font-semibold bg-forest/5 px-2.5 py-1 rounded-pill border border-forest-line/20">
+                  <span class="w-1.5 h-1.5 rounded-full bg-gold animate-pulse"></span>
+                  <span>{{ lang.isSwahili() ? 'Inaendelea kiotomatiki' : 'Auto-advances on selection' }}</span>
+                </span>
               </div>
             </div>
 
@@ -657,7 +648,7 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
               {{ submitError ? 'Unable to Complete Analysis' : lang.t.analyzingTitle }}
             </h2>
             <p class="text-xs text-ivory/60">
-              {{ submitError ? 'We encountered a connection issue while analyzing your answers.' : 'Matching answers against 30+ African business models' }}
+              {{ submitError ? 'We encountered a connection issue while analyzing your answers.' : 'Matching answers against 100+ African business models' }}
             </p>
           </div>
 
@@ -1138,7 +1129,7 @@ export class PathfinderWizardComponent implements OnInit {
   analysisSteps = [
     'Analyzing natural strengths & energy flow...',
     'Computing your Entrepreneur Archetype...',
-    'Evaluating 30+ African business opportunities...',
+    'Evaluating 100+ African business opportunities...',
     'Assessing location and capital feasibility...',
     'Synthesizing 30-day action plan & recommendations...',
   ];
@@ -1534,18 +1525,28 @@ export class PathfinderWizardComponent implements OnInit {
         }
       }
       this.answers[questionId] = current;
-    } else {
-      this.answers[questionId] = optionId;
+      this.cdr.detectChanges();
 
-      // Auto-advance with smooth micro-delay for single choice questions
-      if (this.autoAdvanceEnabled) {
+      // If user selected 3 choices in multi-select, auto-advance smoothly
+      if (current.length === 3) {
         if (this.autoAdvanceTimer) clearTimeout(this.autoAdvanceTimer);
         this.autoAdvanceTimer = setTimeout(() => {
-          if (!this.isLastQuestion() && this.isCurrentQuestionAnswered()) {
-            this.onNextQuestion();
-          }
-        }, 320);
+          this.onNextQuestion();
+          this.cdr.detectChanges();
+        }, 280);
       }
+    } else {
+      this.answers[questionId] = optionId;
+      this.cdr.detectChanges();
+
+      // Auto-advance immediately with slight tactile delay (180ms) for single choice questions
+      if (this.autoAdvanceTimer) clearTimeout(this.autoAdvanceTimer);
+      this.autoAdvanceTimer = setTimeout(() => {
+        if (this.isCurrentQuestionAnswered()) {
+          this.onNextQuestion();
+          this.cdr.detectChanges();
+        }
+      }, 180);
     }
     this.persistProgress();
   }
@@ -1592,6 +1593,7 @@ export class PathfinderWizardComponent implements OnInit {
       this.submitQuestionnaire();
     } else {
       this.currentQuestionIndex++;
+      this.cdr.detectChanges();
     }
   }
 
@@ -1602,6 +1604,7 @@ export class PathfinderWizardComponent implements OnInit {
     }
     if (this.currentQuestionIndex > 0) {
       this.currentQuestionIndex--;
+      this.cdr.detectChanges();
     }
   }
 

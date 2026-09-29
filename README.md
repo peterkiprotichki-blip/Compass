@@ -16,7 +16,7 @@ Compass is an end-to-end guidance platform for African entrepreneurs. It turns a
      - **Entrepreneur Archetype Engine**: 6 archetypes (*The Seller, The Builder, The Creator, The Teacher, The Operator, The Problem Solver*) calculated via weighted formulas + online visibility modifier.
      - **Risk Profile**: Conservative, Moderate, Aggressive.
      - **Business Readiness Score**: 5 pillars (*Capital, Time, Goal clarity, Opportunity awareness, Strength alignment*) scoring out of 100 with clear verdicts.
-     - **Matching Engine**: Intelligently scores user profile against a database of **30+ African business models** across 10 categories.
+     - **Matching Engine**: Intelligently scores user profile against a database of **100+ African business models** across 10 categories.
    - Provides Top 3 recommendations with startup budgets in KES, advantage, risk, concrete first step, and a **30-Day Launch Roadmap**.
 
 2. **Business Compass (Grow My Business v1)**

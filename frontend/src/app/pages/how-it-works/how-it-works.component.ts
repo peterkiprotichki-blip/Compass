@@ -303,12 +303,12 @@ import { LanguageService } from '../../core/services/language.service';
                 </svg>
               </div>
               <h4 class="font-serif font-bold text-base text-charcoal">
-                5. {{ lang.isSwahili() ? 'Mfumo wa Kulinganisha Biashara 30+ Halisi za Kenya' : '30+ African Business Matching Model' }}
+                5. {{ lang.isSwahili() ? 'Mfumo wa Kulinganisha Biashara 100+ Halisi za Kenya' : '100+ African Business Matching Model' }}
               </h4>
               <p class="text-xs text-charcoal/75 leading-relaxed">
                 {{ lang.isSwahili()
-                  ? 'Badala ya mifano ya nchi za mbali, Compass inalinganisha maelezo yako na orodha ya mifumo 30+ halisi inayofanya kazi Nairobi, Kisumu, Nakuru, Eldoret na Mombasa ikiwa na mchanganuo halisi wa mtaji kwa KES, faida, na fursa za mtaa wako.'
-                  : 'Scores your profile against 30+ vetted enterprise models tailored for Nairobi, Mombasa, Kisumu, Nakuru, Eldoret and local counties. Incorporates exact starting capital bands in KES, margin structures, and real local neighborhood requirements.'
+                  ? 'Badala ya mifano ya nchi za mbali, Compass inalinganisha maelezo yako na orodha ya mifumo 100+ halisi inayofanya kazi Nairobi, Kisumu, Nakuru, Eldoret na Mombasa ikiwa na mchanganuo halisi wa mtaji kwa KES, faida, na fursa za mtaa wako.'
+                  : 'Scores your profile against 100+ vetted enterprise models tailored for Nairobi, Mombasa, Kisumu, Nakuru, Eldoret and local counties. Incorporates exact starting capital bands in KES, margin structures, and real local neighborhood requirements.'
                 }}
               </p>
             </div>
@@ -453,7 +453,7 @@ import { LanguageService } from '../../core/services/language.service';
               </h4>
               <p class="text-xs text-ivory/70 leading-relaxed">
                 {{ lang.isSwahili()
-                  ? 'Mifumo 5 inapiga hesabu ya nguvu zako, haiba yako, alama ya utayari, na kulinganisha na mifumo 30+ ya biashara.'
+                  ? 'Mifumo 5 inapiga hesabu ya nguvu zako, haiba yako, alama ya utayari, na kulinganisha na mifumo 100+ ya biashara.'
                   : 'Calculates your readiness pillars and scores matches against verified Kenyan startup databases.'
                 }}
               </p>
