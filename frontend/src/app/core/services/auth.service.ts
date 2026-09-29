@@ -189,21 +189,12 @@ export class AuthService {
 
         if (clientId && google?.accounts?.id) {
           try {
-            const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            const redirectUri = `${window.location.origin}/api/auth/google/callback`;
-
             const initConfig: any = {
               client_id: clientId,
               auto_select: false,
               cancel_on_tap_outside: true,
-            };
-
-            if (isMobile) {
-              initConfig.ux_mode = 'redirect';
-              initConfig.login_uri = redirectUri;
-            } else {
-              initConfig.ux_mode = 'popup';
-              initConfig.callback = (response: any) => {
+              ux_mode: 'popup',
+              callback: (response: any) => {
                 this.ngZone.run(() => {
                   if (response?.credential) {
                     this.loginWithGoogle({ credential: response.credential }).subscribe({
@@ -212,8 +203,8 @@ export class AuthService {
                     });
                   }
                 });
-              };
-            }
+              },
+            };
 
             google.accounts.id.initialize(initConfig);
 
