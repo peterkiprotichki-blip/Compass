@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
@@ -53,7 +53,7 @@ import { GoogleSignInComponent } from '../../shared/components/google-sign-in/go
           <div class="space-y-3 pt-2">
             <a
               routerLink="/profile"
-              class="w-full inline-flex items-center justify-center gap-2 bg-gold hover:bg-gold-soft text-charcoal font-bold text-sm py-3.5 px-4 rounded-button shadow transition-all"
+              class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-gold-soft via-gold to-gold-dark hover:brightness-105 text-charcoal font-bold text-sm py-3.5 px-4 rounded-button shadow-gold-btn transition-all"
             >
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -208,7 +208,7 @@ import { GoogleSignInComponent } from '../../shared/components/google-sign-in/go
             <button
               type="submit"
               [disabled]="isSubmitting"
-              class="w-full bg-gold hover:bg-gold-soft text-charcoal font-bold text-sm py-3.5 rounded-button shadow transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              class="w-full bg-gradient-to-r from-gold-soft via-gold to-gold-dark hover:brightness-105 text-charcoal font-bold text-sm py-3.5 rounded-button shadow-gold-btn transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             >
               <svg *ngIf="isSubmitting" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -251,6 +251,7 @@ export class LoginComponent implements OnInit {
   lang = inject(LanguageService);
   router = inject(Router);
   route = inject(ActivatedRoute);
+  private cdr = inject(ChangeDetectorRef);
 
   isRegisterMode = false;
   isSubmitting = false;
@@ -267,6 +268,7 @@ export class LoginComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       if (params['mode'] === 'register' || params['mode'] === 'signup') {
         this.isRegisterMode = true;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -280,6 +282,7 @@ export class LoginComponent implements OnInit {
   onSignOut(): void {
     this.auth.logout();
     this.authError = '';
+    this.cdr.detectChanges();
   }
 
   onSubmit(event: Event): void {
@@ -288,11 +291,13 @@ export class LoginComponent implements OnInit {
 
     this.authError = '';
     this.isSubmitting = true;
+    this.cdr.detectChanges();
 
     if (this.isRegisterMode) {
       if (!this.authForm.name) {
         this.authError = this.lang.isSwahili() ? 'Tafadhali weka jina lako kamili' : 'Please provide your full name';
         this.isSubmitting = false;
+        this.cdr.detectChanges();
         return;
       }
 
@@ -305,18 +310,21 @@ export class LoginComponent implements OnInit {
       }).subscribe({
         next: () => {
           this.isSubmitting = false;
+          this.cdr.detectChanges();
           const redirectUrl = this.route.snapshot.queryParams['redirect'] || '/profile';
           this.router.navigateByUrl(redirectUrl);
         },
         error: (err: any) => {
           this.isSubmitting = false;
           this.authError = err.error?.message || 'Registration failed. Please try again.';
+          this.cdr.detectChanges();
         }
       });
     } else {
       this.auth.login(this.authForm.email, this.authForm.password).subscribe({
         next: (res: any) => {
           this.isSubmitting = false;
+          this.cdr.detectChanges();
           if (res?.requires2FA) {
             this.router.navigate(['/admin']);
             return;
@@ -327,6 +335,7 @@ export class LoginComponent implements OnInit {
         error: (err: any) => {
           this.isSubmitting = false;
           this.authError = err.error?.message || 'Invalid email or password. Please try again.';
+          this.cdr.detectChanges();
         }
       });
     }

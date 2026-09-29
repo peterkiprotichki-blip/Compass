@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -145,7 +145,7 @@ interface ItemSoldDraft {
 
           <button
             type="submit"
-            class="w-full bg-gold hover:bg-gold-soft text-charcoal font-bold text-sm py-3.5 rounded-button shadow transition-all"
+            class="w-full bg-gradient-to-r from-gold-soft via-gold to-gold-dark hover:brightness-105 text-charcoal font-bold text-sm py-3.5 rounded-button shadow-gold-btn transition-all"
           >
             {{ isLoginMode
               ? (lang.isSwahili() ? 'Ingia & Anza Utatuzi →' : 'Sign In & Begin Diagnosis →')
@@ -412,6 +412,14 @@ interface ItemSoldDraft {
                 <input type="text" [(ngModel)]="onboardingForm.monthlySales" name="monthlySales" placeholder="KSh 0" class="w-full p-2.5 rounded-button border border-forest-line/20 bg-ivory text-xs" />
               </div>
             </div>
+          </div>
+
+          <!-- Error Banner if Submission Fails -->
+          <div *ngIf="onboardingError" class="p-3.5 bg-red-50 border border-red-200 rounded-button text-xs text-red-700 animate-fadeIn flex items-center gap-2">
+            <svg class="w-4 h-4 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{{ onboardingError }}</span>
           </div>
 
           <!-- Submit Button -->
@@ -1193,9 +1201,11 @@ export class GrowBusinessComponent implements OnInit {
   api = inject(ApiService);
   lang = inject(LanguageService);
   auth = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
 
   isLoginMode = false;
   authError = '';
+  onboardingError = '';
   authForm = {
     name: '',
     email: '',
@@ -1282,9 +1292,11 @@ export class GrowBusinessComponent implements OnInit {
       this.auth.login(this.authForm.email, this.authForm.password).subscribe({
         next: () => {
           this.onAuthSuccess();
+          this.cdr.detectChanges();
         },
         error: (err: any) => {
           this.authError = err.error?.message || (this.lang.isSwahili() ? 'Hitilafu wakati wa kuingia. Tafadhali thibitisha taarifa zako.' : 'Login failed. Please check your credentials.');
+          this.cdr.detectChanges();
         }
       });
     } else {
@@ -1300,13 +1312,18 @@ export class GrowBusinessComponent implements OnInit {
       }).subscribe({
         next: () => {
           this.onAuthSuccess();
+          this.cdr.detectChanges();
         },
         error: (err: any) => {
           // If already registered, try logging in
           this.auth.login(this.authForm.email, this.authForm.password).subscribe({
-            next: () => this.onAuthSuccess(),
+            next: () => {
+              this.onAuthSuccess();
+              this.cdr.detectChanges();
+            },
             error: () => {
               this.authError = err.error?.message || (this.lang.isSwahili() ? 'Hitilafu wakati wa kusajili. Jaribu tena.' : 'Registration failed. Please try again.');
+              this.cdr.detectChanges();
             }
           });
         }
@@ -1322,9 +1339,11 @@ export class GrowBusinessComponent implements OnInit {
       this.api.getGrowIntake(savedId).subscribe({
         next: res => {
           this.activeProfile = res;
+          this.cdr.detectChanges();
         },
         error: () => {
           localStorage.removeItem('compass_active_grow_id');
+          this.cdr.detectChanges();
         }
       });
     } else {
@@ -1334,8 +1353,12 @@ export class GrowBusinessComponent implements OnInit {
             this.activeProfile = list[0];
             localStorage.setItem('compass_active_grow_id', this.activeProfile._id);
           }
+          this.cdr.detectChanges();
         },
-        error: (err: any) => console.warn(err)
+        error: (err: any) => {
+          console.warn(err);
+          this.cdr.detectChanges();
+        }
       });
     }
   }
@@ -1347,6 +1370,7 @@ export class GrowBusinessComponent implements OnInit {
     } else {
       this.onboardingForm.originalInvestment = '';
     }
+    this.cdr.detectChanges();
   }
 
   submitOnboarding(e: Event) {
@@ -1355,7 +1379,9 @@ export class GrowBusinessComponent implements OnInit {
       return;
     }
 
+    this.onboardingError = '';
     this.loading = true;
+    this.cdr.detectChanges();
     const userId = this.auth.getEffectiveUserId();
 
     const payload = {
@@ -1384,10 +1410,13 @@ export class GrowBusinessComponent implements OnInit {
         this.activeProfile = res;
         localStorage.setItem('compass_active_grow_id', res._id);
         this.currentTab = 'daily';
+        this.cdr.detectChanges();
       },
       error: (err: any) => {
         this.loading = false;
-        console.error(err);
+        console.error('Grow intake error:', err);
+        this.onboardingError = err?.error?.message || (this.lang.isSwahili() ? 'Hitilafu imetokea wakati wa kuhifadhi. Tafadhali jaribu tena.' : 'Failed to save business profile. Please check your network and try again.');
+        this.cdr.detectChanges();
       }
     });
   }
@@ -1395,6 +1424,7 @@ export class GrowBusinessComponent implements OnInit {
   resetProfile() {
     this.activeProfile = null;
     localStorage.removeItem('compass_active_grow_id');
+    this.cdr.detectChanges();
   }
 
   getEstimatedDailyProfit(): number {
@@ -1473,10 +1503,12 @@ export class GrowBusinessComponent implements OnInit {
         this.dailyDraft.expenses = 0;
         this.draftItemsSold = [];
         this.showItemSales = false;
+        this.cdr.detectChanges();
       },
       error: (err: any) => {
         this.savingDaily = false;
         console.error(err);
+        this.cdr.detectChanges();
       }
     });
   }
@@ -1484,16 +1516,19 @@ export class GrowBusinessComponent implements OnInit {
   saveStockItem() {
     if (!this.activeProfile || !this.newStockItem.name) return;
     this.savingStock = true;
+    this.cdr.detectChanges();
 
     this.api.addStockItem(this.activeProfile._id, this.newStockItem).subscribe({
       next: res => {
         this.savingStock = false;
         this.activeProfile = res;
         this.newStockItem = { name: '', quantity: 1, buyingPrice: 0, sellingPrice: 0 };
+        this.cdr.detectChanges();
       },
       error: (err: any) => {
         this.savingStock = false;
         console.error(err);
+        this.cdr.detectChanges();
       }
     });
   }
@@ -1503,14 +1538,19 @@ export class GrowBusinessComponent implements OnInit {
     this.api.deleteStockItem(this.activeProfile._id, itemId).subscribe({
       next: res => {
         this.activeProfile = res;
+        this.cdr.detectChanges();
       },
-      error: (err: any) => console.error(err)
+      error: (err: any) => {
+        console.error(err);
+        this.cdr.detectChanges();
+      }
     });
   }
 
   unlockPro() {
     if (!this.activeProfile) return;
     this.unlocking = true;
+    this.cdr.detectChanges();
 
     // Simulate M-Pesa STK push or instant unlock
     setTimeout(() => {
@@ -1518,10 +1558,12 @@ export class GrowBusinessComponent implements OnInit {
         next: res => {
           this.unlocking = false;
           this.activeProfile = res;
+          this.cdr.detectChanges();
         },
         error: (err: any) => {
           this.unlocking = false;
           console.error(err);
+          this.cdr.detectChanges();
         }
       });
     }, 900);

@@ -1,7 +1,8 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ApiService } from '../../core/services/api.service';
 import { LanguageService, LanguageCode } from '../../core/services/language.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -38,9 +39,9 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
       
       <!-- ================= 1. SPLASH SCREEN ================= -->
       <div *ngIf="currentScreen === 'SPLASH'" class="min-h-[calc(100dvh-5rem)] bg-forest text-ivory flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden animate-fadeIn">
-        <!-- Subtle background accents -->
-        <div class="absolute inset-0 pointer-events-none opacity-10 bg-[radial-gradient(#D4A017_1px,transparent_1px)] [background-size:24px_24px]"></div>
-        <div class="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-gold/15 blur-3xl pointer-events-none"></div>
+        <!-- Ambient gold glow in background -->
+        <div class="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-gold/20 blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-forest-deep blur-2xl pointer-events-none"></div>
 
         <div class="w-full max-w-md flex flex-col items-center text-center space-y-4 sm:space-y-6 relative z-10 my-auto">
           <!-- Animated Compass Logo -->
@@ -67,7 +68,7 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
           <div class="w-full max-w-sm pt-2 space-y-4">
             <button
               (click)="goToScreen('LANGUAGE')"
-              class="w-full bg-gold hover:bg-gold-soft text-charcoal font-bold text-sm sm:text-base py-3.5 sm:py-4 px-6 rounded-button shadow-lg hover:shadow-gold-glow transition-all flex items-center justify-center gap-2 group"
+              class="w-full bg-gradient-to-r from-gold-soft via-gold to-gold-dark hover:brightness-105 text-charcoal font-bold text-sm sm:text-base py-3.5 sm:py-4 px-6 rounded-button shadow-gold-btn hover:shadow-gold-glow transition-all flex items-center justify-center gap-2 group"
             >
               <span>{{ lang.isSwahili() ? 'Anza Safari Yako' : 'Start Pathfinder' }}</span>
               <svg class="w-5 h-5 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -152,7 +153,7 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
 
           <button
             (click)="goToScreen('JOURNEY')"
-            class="w-full bg-gold hover:bg-gold-soft text-charcoal font-semibold text-sm py-3.5 rounded-button shadow transition-colors"
+            class="w-full bg-gradient-to-r from-gold-soft via-gold to-gold-dark hover:brightness-105 text-charcoal font-bold text-sm py-3.5 rounded-button shadow-gold-btn transition-all"
           >
             {{ lang.t.btnContinue }}
           </button>
@@ -323,7 +324,7 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
 
               <button
                 type="submit"
-                class="w-full bg-gold hover:bg-gold-soft text-charcoal font-bold text-sm py-3.5 rounded-button shadow transition-colors mt-2"
+                class="w-full bg-gradient-to-r from-gold-soft via-gold to-gold-dark hover:brightness-105 text-charcoal font-bold text-sm py-3.5 rounded-button shadow-gold-btn transition-all mt-2"
               >
                 {{ isLoginMode 
                   ? (lang.isSwahili() ? 'Ingia & Anza Maswali →' : 'Log In & Begin Assessment →') 
@@ -377,22 +378,28 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
           </p>
         </div>
 
-        <!-- Pinned Header: Progress bar + Step counter -->
+        <!-- Pinned Header: Top Bar + Progress Bar -->
         <div class="space-y-4" *ngIf="!isLoadingQuestions && questions.length > 0">
           <div class="flex items-center justify-between">
             <button
               (click)="onBackQuestion()"
               [disabled]="currentQuestionIndex === 0"
-              class="text-xs font-semibold text-charcoal/60 hover:text-charcoal disabled:opacity-30 flex items-center gap-1"
+              class="text-xs font-semibold text-charcoal/60 hover:text-charcoal disabled:opacity-30 flex items-center gap-1.5 transition-colors"
             >
-              ← {{ lang.t.btnBack }}
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+              <span>{{ lang.t.btnBack }}</span>
             </button>
-            <span class="text-xs font-serif font-bold text-forest">
-              Compass Pathfinder
-            </span>
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-gold animate-pulse"></span>
+              <span class="text-xs font-serif font-bold text-forest tracking-wide">
+                Compass Pathfinder
+              </span>
+            </div>
             <button
               (click)="lang.toggleLanguage()"
-              class="text-xs font-semibold px-2.5 py-1 rounded bg-ivory-sunk border border-forest/10 text-charcoal"
+              class="text-xs font-semibold px-2.5 py-1 rounded-pill bg-ivory-sunk border border-forest-line/20 hover:border-gold text-charcoal transition-colors"
             >
               {{ lang.currentLang().toUpperCase() }}
             </button>
@@ -402,57 +409,234 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
             [currentStep]="currentQuestionIndex + 1"
             [totalSteps]="questions.length"
           ></app-progress-bar>
+
+          <!-- Resumed progress banner if any -->
+          <div
+            *ngIf="resumedMessage"
+            class="text-xs font-semibold text-forest bg-forest/5 border border-forest/15 px-3.5 py-2.5 rounded-button flex items-center gap-2"
+          >
+            <svg class="w-4 h-4 text-gold flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{{ resumedMessage }}</span>
+          </div>
         </div>
 
-        <!-- Question Card -->
-        <div class="my-8 bg-white p-6 sm:p-10 rounded-sheet border border-forest-line/15 shadow-light-md space-y-6" *ngIf="!isLoadingQuestions && currentQuestion">
+        <!-- Question Card & Interactive Section Chapter -->
+        <div class="my-6 space-y-4" *ngIf="!isLoadingQuestions && currentQuestion">
           
-          <!-- Section Tag -->
-          <div class="space-y-1">
-            <span class="text-[11px] font-semibold uppercase tracking-widest text-gold">
-              {{ lang.isSwahili() ? currentQuestion.sectionTitleSw : currentQuestion.sectionTitle }}
-            </span>
-            <h2 class="text-xl sm:text-2xl font-serif font-bold text-charcoal leading-snug">
-              {{ lang.isSwahili() ? currentQuestion.textSw : currentQuestion.text }}
-            </h2>
-            <p *ngIf="currentQuestion.type === 'multi'" class="text-xs text-charcoal/50 italic">
-              {{ lang.t.selectUpTo3 }}
-            </p>
+          <!-- Encouraging Section Chapter Card -->
+          <div class="bg-forest rounded-sheet p-4 sm:p-5 text-ivory border border-forest-line shadow-forest-card relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="absolute -right-12 -top-12 w-48 h-48 bg-gold/15 rounded-full blur-2xl pointer-events-none"></div>
+
+            <div class="flex items-center gap-3.5 relative z-10">
+              <!-- Section SVG Icon based on sectionId -->
+              <div class="w-11 h-11 rounded-card bg-gold/20 border border-gold/40 flex items-center justify-center text-gold flex-shrink-0 shadow-inner">
+                <!-- Section 1: Situation / Map -->
+                <svg *ngIf="currentQuestion.sectionId === 1" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <polygon points="12 7 16 16 8 16" fill="currentColor" opacity="0.8" />
+                </svg>
+                <!-- Section 2: Strengths / Sparkles -->
+                <svg *ngIf="currentQuestion.sectionId === 2" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+                <!-- Section 3: Work Style / Sliders -->
+                <svg *ngIf="currentQuestion.sectionId === 3" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+                <!-- Section 4: Goals / Target -->
+                <svg *ngIf="currentQuestion.sectionId === 4" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="9" />
+                  <circle cx="12" cy="12" r="5" />
+                  <circle cx="12" cy="12" r="1" fill="currentColor" />
+                </svg>
+                <!-- Section 5: Risk / Shield -->
+                <svg *ngIf="currentQuestion.sectionId === 5" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <!-- Section 6: Local Opportunities / Store -->
+                <svg *ngIf="currentQuestion.sectionId === 6" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+              </div>
+
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-gold">
+                    {{ lang.isSwahili() ? 'Sehemu ' + currentQuestion.sectionId + ' ya 6' : 'Section ' + currentQuestion.sectionId + ' of 6' }}
+                  </span>
+                  <span class="text-ivory/30">·</span>
+                  <span class="text-xs text-ivory/80 font-medium">
+                    {{ lang.isSwahili() ? currentQuestion.sectionTitleSw : currentQuestion.sectionTitle }}
+                  </span>
+                </div>
+                <p class="text-xs sm:text-[13px] text-ivory/90 font-serif font-normal mt-0.5">
+                  {{ getSectionEncouragement(currentQuestion.sectionId) }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Mini Section Progress Pill -->
+            <div class="relative z-10 flex items-center gap-2 self-start sm:self-center bg-forest-deep/80 px-3.5 py-1.5 rounded-pill border border-forest-line/40 text-[11px] flex-shrink-0">
+              <span class="text-gold font-bold">{{ getSectionQuestionProgress() }}</span>
+              <span class="text-ivory/40">·</span>
+              <span class="text-ivory/70">{{ getEstimatedTimeRemaining() }}</span>
+            </div>
           </div>
 
-          <!-- Options -->
-          <div class="space-y-2.5 pt-2" *ngIf="currentQuestion.type !== 'text'">
-            <app-option-row
-              *ngFor="let opt of currentQuestion.options"
-              [label]="lang.isSwahili() ? opt.labelSw : opt.label"
-              [isSelected]="isOptionSelected(currentQuestion.id, opt.id)"
-              [isMulti]="currentQuestion.type === 'multi'"
-              (selectedChange)="onOptionToggle(currentQuestion.id, opt.id, currentQuestion.type === 'multi')"
-            ></app-option-row>
-          </div>
+          <!-- Main Question Surface Card -->
+          <div class="bg-white p-6 sm:p-9 rounded-sheet border border-forest-line/15 shadow-light-md space-y-5">
+            
+            <!-- Question Title & Context -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-pill bg-ivory border border-forest-line/20 text-[10px] font-bold uppercase tracking-wider text-charcoal/70">
+                  <span class="w-1.5 h-1.5 rounded-full bg-forest"></span>
+                  <span>{{ lang.isSwahili() ? 'Swali ' + (currentQuestionIndex + 1) : 'Question ' + (currentQuestionIndex + 1) }}</span>
+                </span>
+                <span *ngIf="currentQuestion.type === 'single'" class="text-[11px] text-charcoal/50 font-medium">
+                  {{ lang.isSwahili() ? 'Chagua jibu moja' : 'Single select' }}
+                </span>
+              </div>
 
-          <!-- Optional text box -->
-          <div *ngIf="currentQuestion.type === 'text'" class="pt-2">
-            <textarea
-              [(ngModel)]="answers[currentQuestion.id]"
-              rows="4"
-              class="w-full p-4 rounded-button border border-forest/20 bg-ivory text-charcoal text-sm focus:outline-none focus:border-gold"
-              placeholder="Type your dream venture or ideas here..."
-            ></textarea>
+              <h2 class="text-xl sm:text-2xl font-serif font-bold text-charcoal leading-snug">
+                {{ lang.isSwahili() ? currentQuestion.textSw : currentQuestion.text }}
+              </h2>
+
+              <!-- "Why This Matters" Strategic Context Insight Card -->
+              <div class="p-3.5 rounded-card bg-ivory/80 border border-forest-line/15 flex items-start gap-2.5 transition-all">
+                <div class="w-6 h-6 rounded-full bg-gold/15 text-gold-dark flex items-center justify-center flex-shrink-0 mt-0.5 border border-gold/30">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 16v-4m0-4h.01" />
+                  </svg>
+                </div>
+                <div class="text-xs space-y-0.5">
+                  <div class="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[10px] text-forest">
+                    <span>{{ lang.isSwahili() ? 'MUKTADHA WA KIMKAKATI' : 'STRATEGIC INSIGHT' }}</span>
+                    <span class="text-charcoal/30">·</span>
+                    <span class="text-charcoal/50 font-normal normal-case">{{ lang.isSwahili() ? 'Kwanini Compass inachambua hili' : 'Why Compass analyzes this' }}</span>
+                  </div>
+                  <p class="text-charcoal/80 leading-relaxed font-sans">
+                    {{ getQuestionInsight(currentQuestion.id) }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Multi-select interactive selection chips -->
+              <div *ngIf="currentQuestion.type === 'multi'" class="p-3 rounded-card bg-forest-deep/5 border border-forest-line/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-full bg-gold text-charcoal font-bold text-xs flex items-center justify-center shadow-sm">
+                    {{ getSelectedCount(currentQuestion.id) }}
+                  </div>
+                  <span class="text-xs font-semibold text-charcoal">
+                    {{ lang.isSwahili() ? 'ya 3 yamechaguliwa' : 'of 3 selected' }}
+                  </span>
+                  <span class="text-xs text-charcoal/50 italic">
+                    ({{ lang.isSwahili() ? 'Chagua 1 hadi 3' : 'Pick 1 to 3 options' }})
+                  </span>
+                </div>
+
+                <!-- Visual indicator chips -->
+                <div class="flex items-center gap-2">
+                  <div
+                    *ngFor="let slot of [0, 1, 2]"
+                    class="px-2.5 py-1 rounded-pill text-[11px] font-bold border transition-all duration-300 flex items-center gap-1"
+                    [ngClass]="{
+                      'bg-gold text-charcoal border-gold shadow-sm shadow-gold/20': getSelectedCount(currentQuestion.id) > slot,
+                      'bg-ivory border-forest-line/30 text-charcoal/40': getSelectedCount(currentQuestion.id) <= slot
+                    }"
+                  >
+                    <span *ngIf="getSelectedCount(currentQuestion.id) > slot">✓</span>
+                    <span>{{ lang.isSwahili() ? 'Chaguo ' + (slot + 1) : 'Choice ' + (slot + 1) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Options list with SVG Vector Icons, Letter Badges, and No Emojis -->
+            <div class="space-y-2.5 pt-1" *ngIf="currentQuestion.type !== 'text'">
+              <app-option-row
+                *ngFor="let opt of currentQuestion.options; let i = index"
+                [label]="lang.isSwahili() ? opt.labelSw : opt.label"
+                [subtitle]="lang.isSwahili() ? opt.subtitleSw : opt.subtitle"
+                [isSelected]="isOptionSelected(currentQuestion.id, opt.id)"
+                [isMulti]="currentQuestion.type === 'multi'"
+                [index]="i"
+                [optionId]="opt.id"
+                (selectedChange)="onOptionToggle(currentQuestion.id, opt.id, currentQuestion.type === 'multi')"
+              ></app-option-row>
+            </div>
+
+            <!-- Optional text box -->
+            <div *ngIf="currentQuestion.type === 'text'" class="pt-2">
+              <textarea
+                [(ngModel)]="answers[currentQuestion.id]"
+                (ngModelChange)="persistProgress()"
+                rows="4"
+                class="w-full p-4 rounded-button border border-forest/20 bg-ivory text-charcoal text-sm focus:outline-none focus:border-gold"
+                placeholder="Type your dream venture or ideas here..."
+              ></textarea>
+            </div>
+
+            <!-- Keyboard shortcuts & Auto-advance control -->
+            <div class="flex items-center justify-between text-xs text-charcoal/50 pt-2 border-t border-forest-line/10">
+              <div class="hidden sm:flex items-center gap-2 text-[11px]">
+                <span class="px-1.5 py-0.5 rounded bg-ivory border border-forest-line/20 font-mono text-[10px] text-charcoal/70">1-9</span>
+                <span>{{ lang.isSwahili() ? 'au' : 'or' }}</span>
+                <span class="px-1.5 py-0.5 rounded bg-ivory border border-forest-line/20 font-mono text-[10px] text-charcoal/70">A-D</span>
+                <span>{{ lang.isSwahili() ? 'kuchagua' : 'to select' }}</span>
+                <span class="text-forest-line/30">|</span>
+                <span class="px-1.5 py-0.5 rounded bg-ivory border border-forest-line/20 font-mono text-[10px] text-charcoal/70">Enter ↵</span>
+                <span>{{ lang.isSwahili() ? 'kuendelea' : 'to proceed' }}</span>
+              </div>
+
+              <div class="flex items-center gap-2 ml-auto">
+                <button
+                  *ngIf="!currentQuestion.type || currentQuestion.type === 'single'"
+                  type="button"
+                  (click)="autoAdvanceEnabled = !autoAdvanceEnabled"
+                  class="text-[11px] text-charcoal/60 hover:text-charcoal flex items-center gap-1.5 transition-colors"
+                  title="Toggle auto-advance on selection"
+                >
+                  <span class="w-3.5 h-3.5 rounded border flex items-center justify-center text-[9px]"
+                    [ngClass]="autoAdvanceEnabled ? 'bg-gold border-gold text-charcoal font-bold' : 'border-forest-line/40'">
+                    {{ autoAdvanceEnabled ? '✓' : '' }}
+                  </span>
+                  <span>{{ lang.isSwahili() ? 'Endelea kiotomatiki' : 'Auto-advance' }}</span>
+                </button>
+              </div>
+            </div>
+
           </div>
 
         </div>
 
-        <!-- Navigation Footer Button -->
-        <div class="flex items-center justify-end gap-4 pt-2">
+        <!-- Navigation Footer Buttons -->
+        <div class="flex items-center justify-between gap-4 pt-3">
+          <button
+            (click)="onBackQuestion()"
+            [disabled]="currentQuestionIndex === 0"
+            class="px-5 py-3.5 rounded-button border border-forest-line/25 hover:border-gold hover:bg-white disabled:opacity-30 disabled:hover:border-forest-line/25 text-xs font-semibold text-charcoal transition-all flex items-center gap-2"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            <span>{{ lang.t.btnBack }}</span>
+          </button>
+
           <button
             (click)="onNextQuestion()"
             [disabled]="!isCurrentQuestionAnswered()"
-            class="bg-gold hover:bg-gold-soft disabled:opacity-40 text-charcoal font-semibold text-sm px-8 py-3.5 rounded-button shadow transition-all flex items-center gap-2"
+            class="bg-gradient-to-r from-gold-soft via-gold to-gold-dark hover:brightness-105 disabled:opacity-40 disabled:hover:brightness-100 text-charcoal font-bold text-sm px-8 py-3.5 rounded-button shadow-gold-btn transition-all flex items-center gap-2"
           >
             <span>{{ isLastQuestion() ? lang.t.btnSubmit : lang.t.btnNext }}</span>
             <svg *ngIf="!isLastQuestion()" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+            <svg *ngIf="isLastQuestion()" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
             </svg>
           </button>
         </div>
@@ -754,7 +938,7 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
               </div>
               <div>
                 <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-pill bg-gold/15 text-gold text-[10px] font-bold uppercase tracking-wider">
-                  Powered by Gemini 3.6 Flash
+                  Powered by Compass AI
                 </div>
                 <h3 class="text-xl sm:text-2xl font-serif font-bold text-ivory mt-0.5">
                   Compass AI Strategic Advisory
@@ -840,20 +1024,21 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
                 </p>
               </div>
             </div>
-            <span class="text-xs font-semibold px-2.5 py-1 rounded-pill bg-gold/15 text-gold-deep border border-gold/30">
-              Gemini Live
+            <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-pill bg-gold/15 text-gold-deep border border-gold/30">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+              <span>Compass AI</span>
             </span>
           </div>
 
           <!-- Chat conversation stream -->
-          <div class="bg-ivory rounded-card p-4 max-h-80 overflow-y-auto space-y-3 border border-forest-line/10">
+          <div class="bg-ivory rounded-card p-4 max-h-[32rem] overflow-y-auto space-y-3 border border-forest-line/10">
             <div *ngFor="let msg of chatMessages" class="flex flex-col" [ngClass]="{'items-end': msg.role === 'user', 'items-start': msg.role === 'model'}">
-              <div class="max-w-[85%] p-3.5 rounded-sheet text-xs leading-relaxed"
+              <div class="max-w-[90%] p-4 rounded-sheet text-xs leading-relaxed"
                 [ngClass]="{
                   'bg-forest text-ivory font-medium': msg.role === 'user',
                   'bg-white text-charcoal border border-forest-line/15 shadow-sm': msg.role === 'model'
                 }">
-                <p class="whitespace-pre-line">{{ msg.text }}</p>
+                <div [innerHTML]="formatChatMessage(msg.text, msg.role === 'user')"></div>
               </div>
               <span class="text-[10px] text-charcoal/40 mt-1 px-1">
                 {{ msg.role === 'user' ? 'You' : 'Compass AI Advisor' }}
@@ -864,7 +1049,7 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
               <div class="w-2 h-2 rounded-full bg-gold animate-bounce"></div>
               <div class="w-2 h-2 rounded-full bg-gold animate-bounce [animation-delay:0.2s]"></div>
               <div class="w-2 h-2 rounded-full bg-gold animate-bounce [animation-delay:0.4s]"></div>
-              <span>Gemini is generating practical advice...</span>
+              <span>Compass AI is generating practical advice...</span>
             </div>
           </div>
 
@@ -921,7 +1106,7 @@ type FlowScreen = 'SPLASH' | 'LANGUAGE' | 'JOURNEY' | 'QUESTIONS' | 'ACCOUNT_GAT
             <button
               *ngIf="result.topMatches && result.topMatches.length > 0"
               (click)="onStartJourney(result.topMatches[0].businessId)"
-              class="bg-gold hover:bg-gold-soft text-charcoal font-semibold text-xs px-6 py-2.5 rounded-button shadow transition-all"
+              class="bg-gradient-to-r from-gold-soft via-gold to-gold-dark hover:brightness-105 text-charcoal font-bold text-xs px-6 py-2.5 rounded-button shadow-gold-btn transition-all"
             >
               Start My Journey →
             </button>
@@ -939,6 +1124,8 @@ export class PathfinderWizardComponent implements OnInit {
   auth = inject(AuthService);
   router = inject(Router);
   route = inject(ActivatedRoute);
+  cdr = inject(ChangeDetectorRef);
+  sanitizer = inject(DomSanitizer);
 
   selectedJourneyType: 'START' | 'GROW' = 'START';
   currentScreen: FlowScreen = 'JOURNEY';
@@ -963,6 +1150,13 @@ export class PathfinderWizardComponent implements OnInit {
 
   ngOnInit() {
     this.loadQuestions();
+
+    const savedResultId = this.route.snapshot.paramMap.get('id');
+    if (savedResultId) {
+      this.loadSavedResult(savedResultId);
+      return;
+    }
+
     this.route.queryParams.subscribe(params => {
       if (params['target'] === 'grow') {
         this.selectedJourneyType = 'GROW';
@@ -1011,10 +1205,15 @@ export class PathfinderWizardComponent implements OnInit {
       next: res => {
         this.questions = res.questions || [];
         this.isLoadingQuestions = false;
+        if (this.currentQuestionIndex > this.questions.length - 1) {
+          this.currentQuestionIndex = 0;
+        }
+        this.cdr.detectChanges();
       },
       error: err => {
         console.error('Error fetching questions', err);
         this.isLoadingQuestions = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -1046,6 +1245,53 @@ export class PathfinderWizardComponent implements OnInit {
     }
     this.currentQuestionIndex = 0;
     this.currentScreen = 'QUESTIONS';
+    this.resumeSavedProgress();
+  }
+
+  // ---- Autosave / resume: progress is tracked server-side per user ----
+  saveTimer: any = null;
+  resumedMessage = '';
+
+  persistProgress() {
+    if (this.saveTimer) {
+      clearTimeout(this.saveTimer);
+    }
+    this.saveTimer = setTimeout(() => {
+      const userId = this.auth.getEffectiveUserId();
+      if (!userId) return;
+      this.api
+        .saveAssessmentProgress({
+          userId,
+          answers: this.answers,
+          currentQuestionIndex: this.currentQuestionIndex,
+        })
+        .subscribe({ error: () => {} });
+    }, 700);
+  }
+
+  resumeSavedProgress() {
+    const userId = this.auth.getEffectiveUserId();
+    if (!userId) return;
+
+    this.api.getAssessmentProgress(userId).subscribe({
+      next: draft => {
+        if (!draft?.answers) return;
+        const answered = Object.keys(draft.answers).length;
+        if (answered === 0) return;
+
+        this.answers = { ...draft.answers };
+        const total = this.questions.length || 22;
+        this.currentQuestionIndex = Math.min(
+          Math.max(draft.currentQuestionIndex || 0, 0),
+          Math.max(total - 1, 0),
+        );
+        this.resumedMessage = this.lang.isSwahili()
+          ? `Imeendelea kutoka mahali ulipoachia (${answered}/${total} maswali yamejibiwa).`
+          : `Picked up where you left off (${answered}/${total} questions answered).`;
+        this.cdr.detectChanges();
+      },
+      error: () => {},
+    });
   }
 
   get currentQuestion(): QuestionDefinition | undefined {
@@ -1058,6 +1304,222 @@ export class PathfinderWizardComponent implements OnInit {
       return val.includes(optionId);
     }
     return val === optionId;
+  }
+
+  autoAdvanceEnabled = true;
+  autoAdvanceTimer: any = null;
+
+  getSectionEncouragement(sectionId: number): string {
+    const sw = this.lang.isSwahili();
+    switch (sectionId) {
+      case 1:
+        return sw
+          ? 'Kila jibu linaweka msingi thabiti wa eneo lako na mtaji wa kuanzia.'
+          : 'Setting the foundation: Local operational environment & starting capital.';
+      case 2:
+        return sw
+          ? 'Kugundua nguvu zako kuu za asili na uwezo wako wa kipekee.'
+          : 'Discovering your unfair advantages & natural superpowers.';
+      case 3:
+        return sw
+          ? 'Kupanga mtindo unaokufaa wa kila siku — ana kwa ana au kidijitali.'
+          : 'Dialing in your preferred rhythm — hands-on field vs. digital operations.';
+      case 4:
+        return sw
+          ? 'Kuweka malengo yako ya mapato ya miezi 12 na mtindo wa maisha.'
+          : 'Calibrating 12-month revenue milestones and business ambitions.';
+      case 5:
+        return sw
+          ? 'Kupima uthubutu wako ili kulinda mtaji dhidi ya mitego ya mwanzo.'
+          : 'Testing risk tolerance to shield your capital against common blindspots.';
+      case 6:
+        return sw
+          ? 'Hatua ya mwisho! Kufunua fursa za mtaani na biashara 3 bora zaidi.'
+          : 'Final stretch! Unlocking unmet neighborhood demand and top matches.';
+      default:
+        return sw
+          ? 'Jibu kwa uhalisia ili kupata mwongozo sahihi wa siku 30.'
+          : 'Answer honestly to shape your high-probability venture blueprint.';
+    }
+  }
+
+  getSectionQuestionProgress(): string {
+    const q = this.currentQuestion;
+    if (!q) return '';
+    const sectionQuestions = this.questions.filter(item => item.sectionId === q.sectionId);
+    const indexInSection = sectionQuestions.findIndex(item => item.id === q.id) + 1;
+    const totalInSection = sectionQuestions.length || 1;
+    return this.lang.isSwahili()
+      ? `Swali ${indexInSection} ya ${totalInSection} katika sehemu hii`
+      : `Question ${indexInSection} of ${totalInSection} in section`;
+  }
+
+  getEstimatedTimeRemaining(): string {
+    const remaining = Math.max(1, (this.questions.length - (this.currentQuestionIndex + 1)));
+    const mins = Math.max(1, Math.ceil(remaining * 0.22));
+    return this.lang.isSwahili()
+      ? `bado ~dakika ${mins}`
+      : `~${mins} min left`;
+  }
+
+  getSelectedCount(questionId: string): number {
+    const val = this.answers[questionId];
+    if (Array.isArray(val)) return val.length;
+    return val ? 1 : 0;
+  }
+
+  getQuestionInsight(questionId: string): string {
+    const sw = this.lang.isSwahili();
+    const insights: Record<string, { en: string; sw: string }> = {
+      q1: {
+        en: 'Factors in local currency stability, county/national regulatory permits, and market purchasing power.',
+        sw: 'Inazingatia sarafu ya nchi, leseni na uwezo wa kiuchumi wa wananchi katika eneo lako.'
+      },
+      q2: {
+        en: 'Urban vs rural settings drastically change footfall, rent overheads, and supply logistics.',
+        sw: 'Jiji au kijijini hubadilisha sana gharama za kodi na wateja wanaopita dukani au shambani.'
+      },
+      q3: {
+        en: 'Identifies ventures where your capital gives 6+ months of operating runway without emergency debt.',
+        sw: 'Inachagua biashara ambazo mtaji wako utakutosha kwa miezi 6 au zaidi bila madeni hatarishi.'
+      },
+      q4: {
+        en: 'Ensures your business roadmap respects whether this is a side hustle or full-time focus.',
+        sw: 'Inahakikisha mpango wako unalingana na muda wako halisi wa kazi au biashara ya pembeni.'
+      },
+      q5: {
+        en: 'Tailors startup momentum and launch speed to your current professional commitments.',
+        sw: 'Inalinganisha mwendo wa kuanza na nafasi yako ya sasa ya kikazi au masomo.'
+      },
+      q6: {
+        en: 'Entrepreneurs aligned with their natural energy persevere 3.8x longer through year-one hurdles.',
+        sw: 'Wajasiriamali wanaofanya kazi wanayoipenda kiuhalisia huvuka vikwazo vya mwaka wa kwanza kirahisi.'
+      },
+      q7: {
+        en: 'Your organic reputation signals your lowest-friction path to your first 10 paying clients.',
+        sw: 'Kile watu wanachokuamini nacho sasa ndicho chanzo cha wateja 10 wa kwanza wanaolipa haraka.'
+      },
+      q8: {
+        en: 'Unlocks your core entrepreneurial Archetype (Builder, Seller, Specialist, or Operator).',
+        sw: 'Inafungua Haiba yako ya Ujasiriamali (Kiongozi, Muuzaji, Mtaalamu, au Msimamizi).'
+      },
+      q9: {
+        en: 'Matches business models to your natural interpersonal strengths and daily comfort.',
+        sw: 'Inalinganisha muundo wa biashara na hulka yako ya asili katika kuingiliana na watu.'
+      },
+      q10: {
+        en: 'Prevents burnout by avoiding ventures that force public visibility if you prefer privacy.',
+        sw: 'Inazuia msongo wa mawazo kwa kuchagua mifumo isiyokulazimisha kujitangaza hadharani.'
+      },
+      q11: {
+        en: 'Determines whether direct storefront service or back-office operations suit you best.',
+        sw: 'Inabaini kama unafaa kuhudumia wateja ana kwa ana au kusimamia mifumo ya ndani.'
+      },
+      q12: {
+        en: 'Filters models between high-margin digital/remote work and grounded physical trade.',
+        sw: 'Inatofautisha kazi za mtandaoni na biashara za uwanjani, mashambani au madukani.'
+      },
+      q13: {
+        en: 'Focuses on the exact day-to-day workspace where you will feel most energized and productive.',
+        sw: 'Inachagua mazingira halisi ya kazi ambapo utakuwa na ari na ufanisi mkubwa kila asubuhi.'
+      },
+      q14: {
+        en: 'Calibrates whether to start with lean solo automation or begin recruiting local team members.',
+        sw: 'Inaamua kuanza kwa mifumo mifupi ya peke yako au kuanzisha timu ya wafanyakazi mapema.'
+      },
+      q15: {
+        en: 'Connects your core motivation to long-term business endurance during difficult market cycles.',
+        sw: 'Inaunganisha nia yako ya kuanzisha biashara na uthabiti wa kusimama nyakati ngumu za soko.'
+      },
+      q16: {
+        en: 'Prioritizes immediate cash flow velocity versus long-term asset scalability.',
+        sw: 'Inatanguliza mtiririko wa pesa za kila siku au ukuaji wa mifumo ya muda mrefu.'
+      },
+      q17: {
+        en: 'Sets the unit-economics benchmark required to achieve your target standard of living.',
+        sw: 'Inaweka hesabu halisi za mauzo na faida zinazohitajika kufikia kipato unacholenga.'
+      },
+      q18: {
+        en: 'Aligns aggressive growth moves with necessary cash safety nets and risk buffers.',
+        sw: 'Inalinganisha kiwango cha uthubutu na ulinzi wa fedha za dharura na usalama.'
+      },
+      q19: {
+        en: 'Tests your recovery grit to prescribe personalized risk shields and prevent common failures.',
+        sw: 'Inapima uwezo wako wa kusimama tena ili kukuwekea ngao dhidi ya makosa ya wengi.'
+      },
+      q20: {
+        en: 'Determines optimal launch speed — agile rapid testing vs. calculated deliberate setup.',
+        sw: 'Inapima kasi ya kuanza — majaribio ya haraka au utafiti wa kina kabla ya kuweka mtaji.'
+      },
+      q21: {
+        en: 'The highest-margin African businesses fill high-demand gaps in everyday essential services.',
+        sw: 'Biashara zenye faida kubwa Afrika huziba mapengo ya huduma muhimu zinazokosekana mtaani.'
+      },
+      q22: {
+        en: 'Solving existing neighborhood complaints guarantees eager, paying customers on day one.',
+        sw: 'Kutatua kero za kawaida za kila siku kunakuhakikishia wateja wanaotaka utatuzi mara moja.'
+      },
+      q23_passion: {
+        en: 'Your passion project illuminates unique future brand expansion and high-margin pivots.',
+        sw: 'Ndoto yako ya moyoni inafungua njia maalum za kukuza chapa yako baadaye.'
+      },
+    };
+
+    const found = insights[questionId];
+    if (found) return sw ? found.sw : found.en;
+
+    return sw
+      ? 'Jibu hili linasaidia kurekebisha hesabu za biashara na mapendekezo yako ya siku 30.'
+      : 'This response directly calibrates the financial models and launch milestones in your roadmap.';
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyboardInput(event: KeyboardEvent) {
+    if (this.currentScreen !== 'QUESTIONS' || this.isLoadingQuestions || !this.currentQuestion) return;
+
+    // Ignore if focus is in an input or textarea
+    const tag = (event.target as HTMLElement)?.tagName?.toLowerCase();
+    if (tag === 'input' || tag === 'textarea') return;
+
+    const q = this.currentQuestion;
+
+    // Enter to proceed
+    if (event.key === 'Enter') {
+      if (this.isCurrentQuestionAnswered()) {
+        event.preventDefault();
+        this.onNextQuestion();
+      }
+      return;
+    }
+
+    // Backspace to go back
+    if (event.key === 'Backspace' && this.currentQuestionIndex > 0) {
+      event.preventDefault();
+      this.onBackQuestion();
+      return;
+    }
+
+    if (!q.options || q.options.length === 0) return;
+
+    // Numbers 1-9
+    const num = parseInt(event.key, 10);
+    if (!isNaN(num) && num >= 1 && num <= q.options.length) {
+      event.preventDefault();
+      const opt = q.options[num - 1];
+      this.onOptionToggle(q.id, opt.id, q.type === 'multi');
+      return;
+    }
+
+    // Letters A-Z
+    const key = event.key.toUpperCase();
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const letterIdx = letters.indexOf(key);
+    if (letterIdx >= 0 && letterIdx < q.options.length) {
+      event.preventDefault();
+      const opt = q.options[letterIdx];
+      this.onOptionToggle(q.id, opt.id, q.type === 'multi');
+      return;
+    }
   }
 
   onOptionToggle(questionId: string, optionId: string, isMulti: boolean) {
@@ -1074,7 +1536,18 @@ export class PathfinderWizardComponent implements OnInit {
       this.answers[questionId] = current;
     } else {
       this.answers[questionId] = optionId;
+
+      // Auto-advance with smooth micro-delay for single choice questions
+      if (this.autoAdvanceEnabled) {
+        if (this.autoAdvanceTimer) clearTimeout(this.autoAdvanceTimer);
+        this.autoAdvanceTimer = setTimeout(() => {
+          if (!this.isLastQuestion() && this.isCurrentQuestionAnswered()) {
+            this.onNextQuestion();
+          }
+        }, 320);
+      }
     }
+    this.persistProgress();
   }
 
   isCurrentQuestionAnswered(): boolean {
@@ -1111,6 +1584,10 @@ export class PathfinderWizardComponent implements OnInit {
   }
 
   onNextQuestion() {
+    if (this.autoAdvanceTimer) {
+      clearTimeout(this.autoAdvanceTimer);
+      this.autoAdvanceTimer = null;
+    }
     if (this.isLastQuestion()) {
       this.submitQuestionnaire();
     } else {
@@ -1119,6 +1596,10 @@ export class PathfinderWizardComponent implements OnInit {
   }
 
   onBackQuestion() {
+    if (this.autoAdvanceTimer) {
+      clearTimeout(this.autoAdvanceTimer);
+      this.autoAdvanceTimer = null;
+    }
     if (this.currentQuestionIndex > 0) {
       this.currentQuestionIndex--;
     }
@@ -1180,44 +1661,44 @@ export class PathfinderWizardComponent implements OnInit {
     this.currentScreen = 'ANALYSIS';
     this.analysisProgress = 0;
     this.submitStartTime = Date.now();
+    this.cdr.detectChanges();
 
-    // Fast animated checklist (120ms per step)
+    // Fast animated checklist (140ms per step)
     const interval = setInterval(() => {
-      this.analysisProgress++;
-      if (this.analysisProgress >= this.analysisSteps.length) {
-        clearInterval(interval);
+      if (this.analysisProgress < this.analysisSteps.length - 1) {
+        this.analysisProgress++;
+        this.cdr.detectChanges();
       }
-    }, 120);
+    }, 140);
 
     const userId = this.auth.getEffectiveUserId();
     this.api.submitAssessment(this.answers, userId).subscribe({
       next: res => {
-        clearInterval(interval);
-        this.analysisProgress = this.analysisSteps.length;
-        this.result = res;
-        this.currentScreen = 'RESULTS';
+        const elapsed = Date.now() - this.submitStartTime;
+        const remainingDelay = Math.max(0, 700 - elapsed);
 
-          // Initialize Gemini AI chat with greeting
-          const topMatchName = res.topMatches?.[0]?.name || 'your recommended venture';
-          this.chatMessages = [
-            {
-              role: 'model',
-              text: `Jambo! I am your Compass AI Advisor. I have analyzed your assessment profile (${res.primaryArchetype}) and strongly recommend exploring ${topMatchName}. Ask me anything about finding local suppliers, setting prices, county licensing, or bootstrapping safely!`
-            }
-          ];
-
-          if (res.topMatches && res.topMatches.length > 0 && res.topMatches[0].businessId) {
-            this.api.getBusinessBySlug(res.topMatches[0].businessId).subscribe({
-              next: biz => {
-                this.topBusinessPlan = (biz?.thirtyDayPlan || []).map(p => ({
-                  week: p.week,
-                  title: p.title,
-                  tasks: (p.tasks || []).map((t, idx) => ({ id: `w${p.week}_t${idx}`, title: t, completed: false }))
-                }));
-              },
-              error: () => {}
-            });
+        setTimeout(() => {
+          clearInterval(interval);
+          this.analysisProgress = this.analysisSteps.length;
+          this.result = res;
+          this.currentScreen = 'RESULTS';
+          this.resumedMessage = '';
+          if (this.saveTimer) {
+            clearTimeout(this.saveTimer);
+            this.saveTimer = null;
           }
+          if (res?._id) {
+            localStorage.setItem('compass_last_result_id', res._id);
+          }
+          this.initResultExtras(res);
+          this.cdr.detectChanges();
+
+          try {
+            if (res?._id) {
+              this.router.navigate(['/results', res._id], { replaceUrl: true });
+            }
+          } catch {}
+
           try {
             confetti({
               particleCount: 70,
@@ -1228,11 +1709,54 @@ export class PathfinderWizardComponent implements OnInit {
           } catch (e) {
             console.warn('Confetti effect failed', e);
           }
+        }, remainingDelay);
       },
       error: err => {
         console.error('Error submitting assessment', err);
         clearInterval(interval);
         this.submitError = 'Unable to complete your analysis right now due to server load or network timeout. Please click Retry below.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private initResultExtras(res: AssessmentResult) {
+    // Initialize Gemini AI chat with greeting
+    const topMatchName = res.topMatches?.[0]?.name || 'your recommended venture';
+    this.chatMessages = [
+      {
+        role: 'model',
+        text: `Jambo! I am your Compass AI Advisor. I have analyzed your assessment profile (${res.primaryArchetype}) and strongly recommend exploring ${topMatchName}. Ask me anything about finding local suppliers, setting prices, county licensing, or bootstrapping safely!`
+      }
+    ];
+
+    if (res.topMatches && res.topMatches.length > 0 && res.topMatches[0].businessId) {
+      this.api.getBusinessBySlug(res.topMatches[0].businessId).subscribe({
+        next: biz => {
+          this.topBusinessPlan = (biz?.thirtyDayPlan || []).map(p => ({
+            week: p.week,
+            title: p.title,
+            tasks: (p.tasks || []).map((t, idx) => ({ id: `w${p.week}_t${idx}`, title: t, completed: false }))
+          }));
+          this.cdr.detectChanges();
+        },
+        error: () => {}
+      });
+    }
+    this.cdr.detectChanges();
+  }
+
+  loadSavedResult(resultId: string) {
+    this.api.getResultById(resultId).subscribe({
+      next: res => {
+        this.result = res;
+        this.currentScreen = 'RESULTS';
+        this.initResultExtras(res);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.currentScreen = 'JOURNEY';
+        this.cdr.detectChanges();
       }
     });
   }
@@ -1252,13 +1776,15 @@ export class PathfinderWizardComponent implements OnInit {
       next: res => {
         this.isChatLoading = false;
         this.chatMessages.push({ role: 'model', text: res.reply });
+        this.cdr.detectChanges();
       },
       error: err => {
         this.isChatLoading = false;
         this.chatMessages.push({
           role: 'model',
-          text: 'Pole sana! The AI advisor encountered an issue. Please verify your GEMINI_API_KEY connection.'
+          text: 'Pole sana! The Compass AI advisor encountered an issue. Please try asking again in a moment.'
         });
+        this.cdr.detectChanges();
       }
     });
   }
@@ -1288,5 +1814,109 @@ export class PathfinderWizardComponent implements OnInit {
 
   printPlan() {
     window.print();
+  }
+
+  formatChatMessage(raw: string, isUser = false): SafeHtml {
+    if (!raw) return this.sanitizer.bypassSecurityTrustHtml('');
+
+    if (isUser) {
+      const sanitized = raw
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      return this.sanitizer.bypassSecurityTrustHtml(
+        `<p class="whitespace-pre-line text-ivory text-xs leading-relaxed font-medium">${sanitized}</p>`
+      );
+    }
+
+    // Escape raw HTML entities first to prevent injection
+    let text = raw
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    const lines = text.split('\n');
+    const output: string[] = [];
+    let inList = false;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmed = line.trim();
+
+      if (!trimmed) {
+        if (inList) {
+          output.push('</ul>');
+          inList = false;
+        }
+        continue;
+      }
+
+      // Check for Markdown headers (### or ## or #)
+      const headerMatch = trimmed.match(/^(#{1,3})\s+(.*)/);
+      if (headerMatch) {
+        if (inList) { output.push('</ul>'); inList = false; }
+        const level = headerMatch[1].length;
+        const title = this.applyInlineStyles(headerMatch[2]);
+        const sizeClass = level === 1 ? 'text-base font-bold' : level === 2 ? 'text-sm font-bold' : 'text-xs font-bold uppercase tracking-wider text-gold-dark';
+        output.push(
+          `<div class="font-serif ${sizeClass} text-forest mt-3.5 mb-1.5">${title}</div>`
+        );
+        continue;
+      }
+
+      // Numbered header item e.g. "1. **Single Business Permit (SBP):**" or "1. Single Business Permit"
+      const numMatch = trimmed.match(/^(\d+)[\.\)]\s+(.*)/);
+      if (numMatch) {
+        if (inList) { output.push('</ul>'); inList = false; }
+        const num = numMatch[1];
+        const content = this.applyInlineStyles(numMatch[2]);
+        output.push(
+          `<div class="font-serif font-bold text-sm text-forest mt-3.5 mb-1.5 flex items-start gap-2">` +
+          `<span class="w-5 h-5 rounded-full bg-gold/20 text-forest font-sans text-[11px] font-bold flex items-center justify-center flex-shrink-0 border border-gold/40 mt-0.5">${num}</span>` +
+          `<span class="flex-1">${content}</span></div>`
+        );
+        continue;
+      }
+
+      // Bullet item e.g. "* **What it is:**", "- Detail", "• Note"
+      const bulletMatch = trimmed.match(/^[\*\-•]\s+(.*)/);
+      if (bulletMatch) {
+        if (!inList) {
+          output.push('<ul class="space-y-1.5 my-2 pl-1">');
+          inList = true;
+        }
+        const content = this.applyInlineStyles(bulletMatch[1]);
+        output.push(
+          `<li class="flex items-start gap-2 text-xs leading-relaxed text-charcoal/90">` +
+          `<span class="text-gold font-bold flex-shrink-0 select-none mt-0.5">•</span>` +
+          `<span class="flex-1">${content}</span></li>`
+        );
+        continue;
+      }
+
+      // Standard paragraph
+      if (inList) { output.push('</ul>'); inList = false; }
+      const content = this.applyInlineStyles(trimmed);
+      output.push(`<p class="text-xs leading-relaxed text-charcoal/90 my-1.5">${content}</p>`);
+    }
+
+    if (inList) {
+      output.push('</ul>');
+    }
+
+    return this.sanitizer.bypassSecurityTrustHtml(output.join(''));
+  }
+
+  private applyInlineStyles(str: string): string {
+    return str
+      // Bold + Italic: ***text***
+      .replace(/\*\*\*(.*?)\*\*\*/g, '<strong class="font-bold text-forest"><em>$1</em></strong>')
+      // Bold: **text**
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-forest">$1</strong>')
+      // Italic: *text* or _text_
+      .replace(/\*([^\*]+)\*/g, '<em class="italic text-charcoal/80">$1</em>')
+      .replace(/_([^_]+)_/g, '<em class="italic text-charcoal/80">$1</em>')
+      // Inline code: `code`
+      .replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 bg-forest-line/15 rounded text-[11px] font-mono text-forest">$1</code>');
   }
 }

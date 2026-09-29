@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Assessment, AssessmentDocument } from '../../database/schemas/assessment.schema';
@@ -9,7 +9,7 @@ import { CANONICAL_QUESTIONS, CANONICAL_SECTIONS } from '../engine/questions.dat
 import { GeminiService } from '../ai/gemini.service';
 
 @Injectable()
-export class AssessmentService {
+export class AssessmentService implements OnModuleInit {
   constructor(
     @InjectModel(Assessment.name) private assessmentModel: Model<AssessmentDocument>,
     @InjectModel(Result.name) private resultModel: Model<ResultDocument>,
@@ -17,6 +17,11 @@ export class AssessmentService {
     private readonly scoringService: ScoringService,
     private readonly geminiService: GeminiService,
   ) {}
+
+  // Warm the scoring cache at boot so the first submission is as fast as the rest.
+  onModuleInit() {
+    this.getScoringBusinesses().catch(() => undefined);
+  }
 
   getQuestionnaire() {
     return {
@@ -26,19 +31,45 @@ export class AssessmentService {
     };
   }
 
+  // Only the fields the scoring engine reads: skips descriptions and the
+  // large thirtyDayPlan arrays that used to dominate this query.
+  private static readonly SCORING_FIELDS =
+    'slug name nameSw category categorySw capitalRequiredMin capitalRequiredMax capitalBand currency ' +
+    'bestArchetypes idealStrengths locationFit timeCommitment difficulty riskLevel firstCustomerTimeline ' +
+    'skillsNeeded capitalSplit biggestAdvantage biggestRisk firstStep imageUrl';
+
+  private static readonly BUSINESS_CACHE_TTL_MS = 30_000;
+  private businessCache: { businesses: Business[]; cachedAt: number } | null = null;
+
+  private async getScoringBusinesses(): Promise<Business[]> {
+    const hit = this.businessCache;
+    if (hit && Date.now() - hit.cachedAt < AssessmentService.BUSINESS_CACHE_TTL_MS) {
+      return hit.businesses;
+    }
+
+    const businesses = (await this.businessModel
+      .find({}, AssessmentService.SCORING_FIELDS)
+      .lean()
+      .exec()) as unknown as Business[];
+
+    if (businesses.length > 0) {
+      this.businessCache = { businesses, cachedAt: Date.now() };
+    }
+    return businesses;
+  }
+
   async submitAssessment(answers: Record<string, any>, userId?: string) {
-    // 1. Save raw assessment
-    const assessment = new this.assessmentModel({
-      userId: userId || null,
-      answers,
-      version: '1.0',
-    });
-    const savedAssessment = await assessment.save();
+    // 1. Save raw assessment + load businesses in parallel
+    const [savedAssessment, businesses] = await Promise.all([
+      new this.assessmentModel({
+        userId: userId || null,
+        answers,
+        version: '1.0',
+      }).save(),
+      this.getScoringBusinesses(),
+    ]);
 
-    // 2. Fetch all businesses for matching
-    const businesses = await this.businessModel.find().exec();
-
-    // 3. Compute score and recommendations
+    // 2. Compute score and recommendations
     const calculatedResult = this.scoringService.computeFullResult(
       savedAssessment._id.toString(),
       answers,
@@ -46,7 +77,7 @@ export class AssessmentService {
       userId,
     );
 
-    // 4. Generate Strategic Brief & Recommendations instantly
+    // 3. Generate Strategic Brief & Recommendations instantly
     const topBiz = calculatedResult.topMatches?.[0];
     const archetype = calculatedResult.primaryArchetype || 'The Seller';
     const capital = answers['q3'] || '50k_100k';
@@ -62,11 +93,51 @@ export class AssessmentService {
       riskShield: `Maintain at least 15% of your startup capital in an emergency reserve to cushion unexpected inventory delays or slow initial weeks.`,
     };
 
-    // 5. Save and return full result
+    // 4. Save the result and clear any in-progress draft in parallel
     const result = new this.resultModel(calculatedResult);
-    const savedResult = await result.save();
+    const draftCleanup = userId
+      ? this.assessmentModel.deleteMany({ userId, status: 'draft' }).exec()
+      : Promise.resolve(null);
+
+    const [savedResult] = await Promise.all([result.save(), draftCleanup]);
 
     return savedResult;
+  }
+
+  async saveProgress(
+    userId: string,
+    answers: Record<string, any>,
+    currentQuestionIndex = 0,
+  ) {
+    if (!userId) {
+      throw new BadRequestException('userId is required to save assessment progress');
+    }
+
+    return this.assessmentModel
+      .findOneAndUpdate(
+        { userId, status: 'draft' },
+        {
+          $set: {
+            userId,
+            answers: answers || {},
+            currentQuestionIndex: currentQuestionIndex || 0,
+            status: 'draft',
+          },
+        },
+        { returnDocument: 'after', upsert: true, setDefaultsOnInsert: true },
+      )
+      .exec();
+  }
+
+  async getProgress(userId: string) {
+    if (!userId) {
+      throw new BadRequestException('userId is required to fetch assessment progress');
+    }
+
+    return this.assessmentModel
+      .findOne({ userId, status: 'draft' })
+      .sort({ updatedAt: -1 })
+      .exec();
   }
 
   async getResultById(resultId: string): Promise<Result> {

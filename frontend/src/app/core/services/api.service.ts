@@ -19,9 +19,17 @@ import {
 })
 export class ApiService {
   private http = inject(HttpClient);
-  private baseUrl = typeof window !== 'undefined' && window.location.hostname !== 'localhost'
-    ? '/api'
-    : 'http://localhost:3000/api';
+  private baseUrl = this.resolveBaseUrl();
+
+  private resolveBaseUrl(): string {
+    if (typeof window === 'undefined') return 'http://localhost:3000/api';
+    const { hostname, port, protocol } = window.location;
+    const isLanIp = /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname) || hostname === 'localhost' || hostname === '127.0.0.1';
+    if (port === '4200' || (isLanIp && port !== '3000')) {
+      return `${protocol}//${hostname}:3000/api`;
+    }
+    return '/api';
+  }
 
   getQuestions(): Observable<QuestionnaireResponse> {
     return this.http.get<QuestionnaireResponse>(`${this.baseUrl}/assessment/questions`);
@@ -40,6 +48,18 @@ export class ApiService {
 
   getUserResults(userId: string): Observable<AssessmentResult[]> {
     return this.http.get<AssessmentResult[]>(`${this.baseUrl}/assessment/user/${userId}`);
+  }
+
+  saveAssessmentProgress(payload: {
+    userId: string;
+    answers: Record<string, any>;
+    currentQuestionIndex?: number;
+  }): Observable<any> {
+    return this.http.post(`${this.baseUrl}/assessment/progress`, payload);
+  }
+
+  getAssessmentProgress(userId: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/assessment/progress/${encodeURIComponent(userId)}`);
   }
 
   getBusinesses(category?: string, capitalBand?: string): Observable<Business[]> {

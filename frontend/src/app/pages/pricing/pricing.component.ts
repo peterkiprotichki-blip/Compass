@@ -53,15 +53,15 @@ import { LanguageService } from '../../core/services/language.service';
 
           <a
             routerLink="/pathfinder"
-            class="w-full text-center py-3.5 rounded-button border border-forest font-semibold text-xs text-forest hover:bg-ivory transition-colors"
+            class="w-full text-center py-3.5 rounded-button border-2 border-forest font-bold text-xs text-forest hover:bg-forest hover:text-ivory transition-all"
           >
             {{ lang.isSwahili() ? 'Anza Tathmini ya Bure' : 'Start Free Assessment' }}
           </a>
         </div>
 
         <!-- Pathfinder Full Access (Featured) -->
-        <div class="bg-forest rounded-sheet p-8 text-ivory border-2 border-gold shadow-2xl relative flex flex-col justify-between space-y-6">
-          <div class="absolute -top-3.5 right-6 px-3 py-1 rounded-pill bg-gold text-charcoal text-[11px] font-bold uppercase tracking-wider shadow">
+        <div class="bg-forest rounded-sheet p-8 text-ivory border-2 border-gold shadow-forest-card relative flex flex-col justify-between space-y-6">
+          <div class="absolute -top-3.5 right-6 px-3.5 py-1 rounded-pill bg-gradient-to-r from-gold-soft via-gold to-gold-dark text-charcoal text-[11px] font-bold uppercase tracking-wider shadow-sm">
             {{ lang.isSwahili() ? 'Ofa Maalum' : 'Launch Special' }}
           </div>
 
@@ -73,7 +73,7 @@ import { LanguageService } from '../../core/services/language.service';
               {{ lang.isSwahili() ? 'Taarifa kamili za biashara na ramani ya utekelezaji ya siku 30.' : 'Full business intelligence and 30-day execution blueprint.' }}
             </p>
             <div class="pt-2">
-              <span class="font-serif text-4xl font-bold text-gold">KES 499</span>
+              <span class="font-serif text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gold-light via-gold to-gold-soft">KES 499</span>
               <span class="text-xs text-ivory/60"> / {{ lang.isSwahili() ? 'mara moja tu' : 'one-time unlock' }}</span>
             </div>
 
@@ -90,7 +90,7 @@ import { LanguageService } from '../../core/services/language.service';
 
           <a
             routerLink="/pathfinder"
-            class="w-full text-center py-3.5 rounded-button bg-gold hover:bg-gold-soft font-semibold text-xs text-charcoal shadow-lg transition-all"
+            class="w-full text-center py-4 rounded-button bg-gradient-to-r from-gold-soft via-gold to-gold-dark hover:brightness-105 font-bold text-sm text-charcoal shadow-gold-btn hover:shadow-gold-glow transition-all"
           >
             {{ lang.isSwahili() ? 'Fungua Pathfinder kwa KES 499' : 'Unlock Pathfinder for KES 499' }}
           </a>

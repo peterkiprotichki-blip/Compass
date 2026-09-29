@@ -7,27 +7,37 @@ module.exports = {
     extend: {
       colors: {
         forest: {
-          DEFAULT: '#0B2E24',
-          deep: '#071C16',
-          line: '#1D4438',
+          DEFAULT: '#0E2E24',
+          deep: '#082119',
+          darker: '#051610',
+          line: '#183E31',
+          surface: '#12382C',
+          muted: '#1B4738',
         },
         charcoal: {
           DEFAULT: '#111827',
           dark: '#0B0F19',
+          muted: '#4B5563',
+          light: '#6B7280',
         },
         gold: {
-          DEFAULT: '#D4A017',
-          soft: '#E8B94A',
-          dark: '#B0830E',
+          DEFAULT: '#D4A827',
+          soft: '#ECC669',
+          rich: '#E5B544',
+          light: '#F8E9BE',
+          dark: '#B8851B',
+          deep: '#8C6510',
         },
         ivory: {
-          DEFAULT: '#F9F7EF',
-          sunk: '#F1EEE3',
+          DEFAULT: '#FDFBF7',
+          sunk: '#F4F0E6',
+          cream: '#FAF6EE',
+          pure: '#FFFFFF',
         },
         semantic: {
-          success: '#3E9E6E',
-          caution: '#D4A017',
-          risk: '#C2603A',
+          success: '#2E8B57',
+          caution: '#D4A827',
+          risk: '#C25734',
         }
       },
       fontFamily: {
@@ -41,9 +51,11 @@ module.exports = {
         pill: '9999px',
       },
       boxShadow: {
-        'light-sm': '0 1px 2px rgba(17,24,39,0.06)',
-        'light-lg': '0 8px 24px rgba(17,24,39,0.08)',
-        'gold-glow': '0 0 20px rgba(212,160,23,0.3)',
+        'light-sm': '0 1px 3px rgba(14,46,36,0.06)',
+        'light-lg': '0 10px 30px -4px rgba(14,46,36,0.08)',
+        'gold-glow': '0 0 25px rgba(212,168,39,0.35)',
+        'gold-btn': '0 4px 14px rgba(212,168,39,0.3)',
+        'forest-card': '0 12px 36px -4px rgba(8,33,25,0.4)',
       },
       animation: {
         'compass-spin': 'compassSpin 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite',

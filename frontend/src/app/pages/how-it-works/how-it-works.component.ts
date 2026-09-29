@@ -12,9 +12,17 @@ import { LanguageService } from '../../core/services/language.service';
 
       <!-- ================= 1. HERO SECTION ================= -->
       <section class="relative bg-forest text-ivory overflow-hidden pt-16 pb-24 md:py-28 border-b border-forest-line">
-        <!-- Background accents -->
-        <div class="absolute inset-0 pointer-events-none opacity-10 bg-[radial-gradient(#D4A017_1px,transparent_1px)] [background-size:24px_24px]"></div>
-        <div class="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-gold/15 blur-3xl pointer-events-none"></div>
+        <!-- Cinematic African Dawn Landscape Background -->
+        <div class="absolute inset-0 z-0">
+          <img
+            src="brand/hero-landscape.jpg"
+            alt="African Highlands at Dawn"
+            class="w-full h-full object-cover object-center opacity-30 transform scale-105"
+          />
+          <div class="absolute inset-0 bg-gradient-to-r from-forest-deep/95 via-forest/85 to-forest-deep/80"></div>
+          <div class="absolute inset-0 bg-gradient-to-t from-forest-deep via-transparent to-forest-deep/70"></div>
+          <div class="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-gold/20 blur-3xl pointer-events-none"></div>
+        </div>
 
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-6">
           <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-pill bg-forest-deep border border-forest-line text-xs font-semibold text-gold uppercase tracking-wider">
@@ -41,7 +49,7 @@ import { LanguageService } from '../../core/services/language.service';
           <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
               routerLink="/pathfinder"
-              class="w-full sm:w-auto inline-flex items-center justify-center bg-gold hover:bg-gold-soft text-charcoal font-semibold text-sm sm:text-base px-8 py-4 rounded-button shadow-lg hover:shadow-gold-glow transition-all"
+              class="w-full sm:w-auto inline-flex items-center justify-center bg-gradient-to-r from-gold-soft via-gold to-gold-dark hover:brightness-105 text-charcoal font-bold text-sm sm:text-base px-8 py-4 rounded-button shadow-gold-btn hover:shadow-gold-glow transition-all"
             >
               <span>{{ lang.t.btnStartMyBusiness }}</span>
               <svg class="w-5 h-5 ml-2 -mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -370,7 +378,7 @@ import { LanguageService } from '../../core/services/language.service';
               </svg>
             </div>
             <h3 class="font-serif font-bold text-lg text-charcoal">
-              {{ lang.isSwahili() ? 'Ushauri wa Kimkakati wa Gemini AI' : 'Gemini AI Strategic Advisory' }}
+              {{ lang.isSwahili() ? 'Ushauri wa Kimkakati wa Compass AI' : 'Compass AI Strategic Advisory' }}
             </h3>
             <p class="text-xs text-charcoal/80 leading-relaxed">
               {{ lang.isSwahili()
@@ -385,7 +393,7 @@ import { LanguageService } from '../../core/services/language.service';
 
       <!-- ================= 5. STEP-BY-STEP USER JOURNEY ================= -->
       <section class="py-20 bg-forest text-ivory border-y border-forest-line relative overflow-hidden">
-        <div class="absolute inset-0 pointer-events-none opacity-10 bg-[radial-gradient(#D4A017_1px,transparent_1px)] [background-size:24px_24px]"></div>
+        <div class="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-gold/15 blur-3xl pointer-events-none"></div>
 
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-12">
           
@@ -538,7 +546,7 @@ import { LanguageService } from '../../core/services/language.service';
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
             routerLink="/pathfinder"
-            class="w-full sm:w-auto bg-gold hover:bg-gold-soft text-charcoal font-bold text-sm px-8 py-4 rounded-button shadow-light-lg transition-all"
+            class="w-full sm:w-auto bg-gradient-to-r from-gold-soft via-gold to-gold-dark hover:brightness-105 text-charcoal font-bold text-sm px-8 py-4 rounded-button shadow-gold-btn transition-all"
           >
             {{ lang.t.btnStartMyBusiness }} →
           </a>

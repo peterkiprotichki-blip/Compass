@@ -26,7 +26,10 @@ type AdminTab = 'OVERVIEW' | 'APPLICATIONS' | 'APPLICANTS' | 'JOURNEYS' | 'GROWT
         <div class="max-w-7xl mx-auto flex items-center justify-between">
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center text-gold font-bold">
-              🧭
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <polygon points="12 7 16 16 8 16" fill="currentColor" opacity="0.8" />
+              </svg>
             </div>
             <div>
               <div class="flex items-center gap-2">
@@ -66,8 +69,10 @@ type AdminTab = 'OVERVIEW' | 'APPLICATIONS' | 'APPLICANTS' | 'JOURNEYS' | 'GROWT
         <div class="w-full max-w-md bg-white p-8 sm:p-10 rounded-sheet border border-forest-line/20 shadow-light-xl space-y-6">
           
           <div class="text-center space-y-2">
-            <div class="w-14 h-14 mx-auto rounded-full bg-forest text-gold flex items-center justify-center text-2xl border border-gold/30 shadow-inner">
-              🔐
+            <div class="w-14 h-14 mx-auto rounded-full bg-forest text-gold flex items-center justify-center border border-gold/30 shadow-inner">
+              <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
             </div>
             <h2 class="text-2xl font-serif font-bold text-charcoal">
               Super Admin Access
@@ -122,7 +127,9 @@ type AdminTab = 'OVERVIEW' | 'APPLICATIONS' | 'APPLICANTS' | 'JOURNEYS' | 'GROWT
                   }"
                   class="p-2.5 rounded-button border text-xs flex items-center justify-center gap-2 transition-all"
                 >
-                  <span>✉️</span>
+                  <svg class="w-4 h-4 text-forest" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
                   <span>Email OTP</span>
                 </button>
                 <button
@@ -134,7 +141,9 @@ type AdminTab = 'OVERVIEW' | 'APPLICATIONS' | 'APPLICANTS' | 'JOURNEYS' | 'GROWT
                   }"
                   class="p-2.5 rounded-button border text-xs flex items-center justify-center gap-2 transition-all"
                 >
-                  <span>📱</span>
+                  <svg class="w-4 h-4 text-forest" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
                   <span>SMS OTP</span>
                 </button>
               </div>
@@ -250,7 +259,9 @@ type AdminTab = 'OVERVIEW' | 'APPLICATIONS' | 'APPLICANTS' | 'JOURNEYS' | 'GROWT
               [disabled]="isLoading"
               class="px-4 py-2 rounded-button bg-white border border-forest-line/20 hover:border-gold text-xs font-semibold text-charcoal shadow-sm transition-all flex items-center gap-1.5"
             >
-              <span>🔄</span>
+              <svg class="w-3.5 h-3.5 text-forest" [class.animate-spin]="isLoading" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
               <span>{{ isLoading ? 'Refreshing...' : 'Refresh Live Data' }}</span>
             </button>
           </div>
@@ -496,7 +507,7 @@ type AdminTab = 'OVERVIEW' | 'APPLICATIONS' | 'APPLICANTS' | 'JOURNEYS' | 'GROWT
                     </td>
                     <td class="p-3.5">
                       <span *ngIf="app.hasAiInsight" class="px-2 py-0.5 rounded-pill bg-gold/15 text-gold-deep text-[10px] font-bold">
-                        Gemini 3.6
+                        Compass AI
                       </span>
                       <span *ngIf="!app.hasAiInsight" class="text-charcoal/40 text-[10px]">Standard</span>
                     </td>
@@ -757,7 +768,7 @@ type AdminTab = 'OVERVIEW' | 'APPLICATIONS' | 'APPLICANTS' | 'JOURNEYS' | 'GROWT
               <svg class="w-4 h-4 text-gold flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
               </svg>
-              <span>Gemini 3.6 Flash Strategic Briefing</span>
+              <span>Compass AI Strategic Briefing</span>
             </div>
             <p class="text-xs text-ivory/90 leading-relaxed font-normal">
               {{ inspectingApp.result.aiInsight.executiveBrief }}

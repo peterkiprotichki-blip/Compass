@@ -1,6 +1,6 @@
-import { Component, OnInit, inject, Input } from '@angular/core';
+import { Component, OnInit, inject, Input, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { LanguageService } from '../../core/services/language.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -12,7 +12,31 @@ import { WeekBlockComponent } from '../../shared/components/week-block/week-bloc
   standalone: true,
   imports: [CommonModule, RouterModule, WeekBlockComponent],
   template: `
-    <div class="min-h-screen bg-ivory py-10 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-10" *ngIf="business">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="min-h-[60vh] flex flex-col items-center justify-center space-y-4 py-20 bg-ivory">
+      <div class="w-10 h-10 border-3 border-gold border-t-transparent rounded-full animate-spin"></div>
+      <p class="text-sm font-medium text-charcoal/70">
+        {{ lang.isSwahili() ? 'Inapakia maelezo ya fursa ya biashara...' : 'Loading business opportunity blueprint...' }}
+      </p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !isLoading" class="min-h-[50vh] flex flex-col items-center justify-center text-center p-8 space-y-4 max-w-md mx-auto my-12 bg-white rounded-sheet border border-forest-line/15 shadow-sm">
+      <div class="w-14 h-14 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700">
+        <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+      </div>
+      <h3 class="font-serif font-bold text-xl text-charcoal">
+        {{ lang.isSwahili() ? 'Fursa Hii Haikupatikana' : 'Business Details Not Found' }}
+      </h3>
+      <p class="text-xs text-charcoal/70">{{ error }}</p>
+      <button (click)="goBack()" class="px-5 py-2.5 rounded-button bg-forest text-gold text-xs font-semibold hover:bg-forest-deep transition-all">
+        {{ lang.isSwahili() ? '← Rudi kwenye Matokeo' : '← Return to Assessment Results' }}
+      </button>
+    </div>
+
+    <div class="min-h-screen bg-ivory py-10 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-10" *ngIf="business && !isLoading">
       
       <!-- Back Navigation -->
       <div>
@@ -103,10 +127,12 @@ import { WeekBlockComponent } from '../../shared/components/week-block/week-bloc
 
         <button
           (click)="onStartJourney()"
-          class="bg-gold hover:bg-gold-soft text-charcoal font-semibold text-xs px-6 py-2.5 rounded-button shadow transition-all flex items-center gap-2"
+          [disabled]="isStartingJourney"
+          class="bg-gold hover:bg-gold-soft disabled:opacity-50 text-charcoal font-semibold text-xs px-6 py-2.5 rounded-button shadow transition-all flex items-center gap-2"
         >
-          <span>{{ lang.isSwahili() ? 'Anza Safari ya Utekelezaji' : 'Start My Tracked Journey' }}</span>
-          <span>→</span>
+          <div *ngIf="isStartingJourney" class="w-3.5 h-3.5 border-2 border-charcoal border-t-transparent rounded-full animate-spin"></div>
+          <span>{{ isStartingJourney ? (lang.isSwahili() ? 'Inaanzisha...' : 'Starting...') : (lang.isSwahili() ? 'Anza Safari ya Utekelezaji' : 'Start My Tracked Journey') }}</span>
+          <span *ngIf="!isStartingJourney">→</span>
         </button>
       </div>
 
@@ -246,16 +272,49 @@ export class BusinessDetailPageComponent implements OnInit {
   lang = inject(LanguageService);
   auth = inject(AuthService);
   router = inject(Router);
+  route = inject(ActivatedRoute);
+  cdr = inject(ChangeDetectorRef);
 
   business: Business | null = null;
+  isLoading = true;
+  error: string | null = null;
 
   ngOnInit() {
-    if (this.slug) {
-      this.api.getBusinessBySlug(this.slug).subscribe({
-        next: res => this.business = res,
-        error: err => console.error(err)
-      });
-    }
+    this.route.paramMap.subscribe(params => {
+      const rawSlug = params.get('slug') || this.slug;
+      if (rawSlug) {
+        this.fetchBusiness(rawSlug);
+      } else {
+        this.isLoading = false;
+        this.error = this.lang.isSwahili()
+          ? 'Hakuna fursa iliyobainishwa.'
+          : 'No business opportunity specified.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  fetchBusiness(rawSlug: string) {
+    this.isLoading = true;
+    this.error = null;
+    this.cdr.detectChanges();
+
+    this.api.getBusinessBySlug(rawSlug).subscribe({
+      next: res => {
+        this.business = res;
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: err => {
+        console.error('Failed to load business', err);
+        this.business = null;
+        this.isLoading = false;
+        this.error = this.lang.isSwahili()
+          ? 'Samahani, maelezo ya fursa hii hayakupatikana.'
+          : 'Sorry, details for this business opportunity could not be found.';
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   get isSaved(): boolean {
@@ -270,11 +329,29 @@ export class BusinessDetailPageComponent implements OnInit {
     });
   }
 
+  isStartingJourney = false;
+
   onStartJourney() {
-    if (!this.business) return;
+    if (!this.business || this.isStartingJourney) return;
+    this.isStartingJourney = true;
+    this.cdr.detectChanges();
+
     const userId = this.auth.getEffectiveUserId();
-    this.api.startJourney(userId, this.business.slug).subscribe({
-      next: journey => this.router.navigate(['/journey', journey._id])
+    const slugToUse = this.business.slug || this.slug;
+
+    this.api.startJourney(userId, slugToUse).subscribe({
+      next: journey => {
+        this.isStartingJourney = false;
+        this.cdr.detectChanges();
+        if (journey?._id) {
+          this.router.navigate(['/journey', journey._id]);
+        }
+      },
+      error: err => {
+        console.error('Failed to start journey', err);
+        this.isStartingJourney = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 

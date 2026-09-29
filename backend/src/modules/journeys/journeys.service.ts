@@ -11,11 +11,53 @@ export class JourneysService {
     @InjectModel(Business.name) private businessModel: Model<BusinessDocument>,
   ) {}
 
-  async startJourney(userId: string, businessSlug: string) {
-    const business = await this.businessModel.findOne({ slug: businessSlug }).exec();
-    if (!business) {
-      throw new NotFoundException(`Business '${businessSlug}' not found`);
+  async startJourney(userId: string, rawSlug: string) {
+    if (!rawSlug) {
+      throw new NotFoundException('Business slug is required');
     }
+
+    const decoded = decodeURIComponent(rawSlug).trim();
+
+    // 1. Exact match
+    let business = await this.businessModel.findOne({ slug: decoded }).exec();
+
+    // 2. Normalized hyphenated slug
+    if (!business) {
+      const hyphenated = decoded
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      business = await this.businessModel.findOne({ slug: hyphenated }).exec();
+    }
+
+    // 3. Case-insensitive regex match
+    if (!business) {
+      const hyphenated = decoded
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      business = await this.businessModel.findOne({
+        slug: { $regex: new RegExp(`^${hyphenated}$`, 'i') }
+      }).exec();
+    }
+
+    // 4. Name match
+    if (!business) {
+      const nameSearch = decoded.replace(/-/g, ' ');
+      business = await this.businessModel.findOne({
+        $or: [
+          { name: { $regex: new RegExp(`^${nameSearch}$`, 'i') } },
+          { name: { $regex: new RegExp(decoded, 'i') } },
+          { nameSw: { $regex: new RegExp(decoded, 'i') } }
+        ]
+      }).exec();
+    }
+
+    if (!business) {
+      throw new NotFoundException(`Business '${rawSlug}' not found`);
+    }
+
+    const businessSlug = business.slug;
 
     // Check if user already has an active journey for this business
     let journey = await this.journeyModel.findOne({ userId, businessId: businessSlug }).exec();

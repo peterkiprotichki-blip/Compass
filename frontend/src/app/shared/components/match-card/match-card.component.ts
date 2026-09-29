@@ -123,15 +123,15 @@ import { LanguageService } from '../../../core/services/language.service';
           <span>{{ isSaved ? lang.t.btnSaved : lang.t.btnSaveThisPath }}</span>
         </button>
 
-        <a
-          [routerLink]="['/business', match.businessId]"
-          class="inline-flex items-center gap-1.5 bg-forest hover:bg-forest-deep text-ivory text-xs font-semibold px-4 py-2 rounded-button shadow transition-all"
-        >
-          <span>{{ lang.t.btnViewDetails }}</span>
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-          </svg>
-        </a>
+          <a
+            [routerLink]="['/business', businessSlug]"
+            class="inline-flex items-center gap-1.5 bg-forest hover:bg-forest-deep text-gold-soft border border-gold/25 hover:border-gold text-xs font-semibold px-4 py-2 rounded-button shadow transition-all"
+          >
+            <span>{{ lang.t.btnViewDetails }}</span>
+            <svg class="w-3.5 h-3.5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </a>
       </div>
 
     </div>
@@ -143,4 +143,13 @@ export class MatchCardComponent {
   @Input() rank: number = 1;
   @Input() isSaved: boolean = false;
   @Output() savePath = new EventEmitter<string>();
+
+  get businessSlug(): string {
+    if (!this.match?.businessId) return '';
+    return this.match.businessId
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
 }

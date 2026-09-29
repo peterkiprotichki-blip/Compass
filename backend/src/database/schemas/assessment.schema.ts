@@ -13,6 +13,13 @@ export class Assessment {
 
   @Prop({ default: '1.0' })
   version: string;
+
+  // 'draft' = in-progress questionnaire, 'submitted' = completed assessment
+  @Prop({ default: 'submitted' })
+  status: string;
+
+  @Prop({ type: Number, default: 0 })
+  currentQuestionIndex: number;
 }
 
 export const AssessmentSchema = SchemaFactory.createForClass(Assessment);

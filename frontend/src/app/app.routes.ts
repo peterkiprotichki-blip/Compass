@@ -17,6 +17,7 @@ export const routes: Routes = [
   { path: 'signin', component: LoginComponent },
   { path: 'signup', component: LoginComponent },
   { path: 'pathfinder', component: PathfinderWizardComponent },
+  { path: 'results/:id', component: PathfinderWizardComponent },
   { path: 'business/:slug', component: BusinessDetailPageComponent },
   { path: 'journey/:id', component: JourneyTrackerPageComponent },
   { path: 'grow-business', component: GrowBusinessComponent },

@@ -17,6 +17,27 @@ export class AssessmentController {
     return this.assessmentService.submitAssessment(payload.answers, payload.userId);
   }
 
+  @Post('progress')
+  async saveProgress(
+    @Body()
+    payload: {
+      userId: string;
+      answers: Record<string, any>;
+      currentQuestionIndex?: number;
+    },
+  ) {
+    return this.assessmentService.saveProgress(
+      payload.userId,
+      payload.answers,
+      payload.currentQuestionIndex,
+    );
+  }
+
+  @Get('progress/:userId')
+  async getProgress(@Param('userId') userId: string) {
+    return this.assessmentService.getProgress(userId);
+  }
+
   @Get('results/:id')
   async getResultById(@Param('id') id: string) {
     return this.assessmentService.getResultById(id);

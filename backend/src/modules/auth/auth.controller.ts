@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
@@ -37,6 +37,23 @@ export class AuthController {
     @Body() body: { credential?: string; googleId?: string; email?: string; name?: string; avatarUrl?: string },
   ) {
     return this.authService.loginWithGoogle(body);
+  }
+
+  @Post('google/callback')
+  async googleRedirectCallback(@Body() body: any, @Res() res: any, @Req() req: any) {
+    try {
+      const credential = body?.credential;
+      if (!credential) {
+        return res.redirect('/login?error=' + encodeURIComponent('Missing Google credential'));
+      }
+      const result = await this.authService.loginWithGoogle({ credential });
+      const encodedUser = encodeURIComponent(JSON.stringify(result.user));
+      const encodedToken = encodeURIComponent(result.token);
+      return res.redirect(`/?auth_token=${encodedToken}&auth_user=${encodedUser}`);
+    } catch (err: any) {
+      console.error('Google callback redirect error:', err.message);
+      return res.redirect('/login?error=' + encodeURIComponent(err.message || 'Google authentication failed'));
+    }
   }
 
   @Get('profile/:id')

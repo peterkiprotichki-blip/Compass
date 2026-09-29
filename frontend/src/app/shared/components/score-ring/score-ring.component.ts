@@ -58,8 +58,8 @@ export class ScoreRingComponent {
   @Input() score: number = 85;
   @Input() size: number = 130;
   @Input() strokeWidth: number = 10;
-  @Input() strokeColor: string = '#D4A017'; // Gold
-  @Input() trackColor: string = 'rgba(212, 160, 23, 0.15)';
+  @Input() strokeColor: string = '#D4A827'; // Luxury Gold
+  @Input() trackColor: string = 'rgba(212, 168, 39, 0.2)';
   @Input() textColorClass: string = 'text-charcoal';
   @Input() suffix: string = '%';
   @Input() label?: string;

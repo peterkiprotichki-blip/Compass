@@ -88,8 +88,8 @@ const EN_TRANSLATIONS: LanguageTranslations = {
 const SW_TRANSLATIONS: LanguageTranslations = {
   navHome: 'Nyumbani',
   navAbout: 'Kuhusu Sisi',
-  navHowItWorks: 'Jinsi Inavyofanya Kazi',
-  navResources: 'Nyenzo na Mafunzo',
+  navHowItWorks: 'Mwongozo',
+  navResources: 'Nyenzo',
   navPricing: 'Gharama',
   navGetStarted: 'Anza Sasa',
   navDashboard: 'Dashibodi',

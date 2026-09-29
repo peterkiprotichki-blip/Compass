@@ -4,11 +4,12 @@ import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { NavbarComponent } from './shared/components/navbar/navbar.component';
 import { FooterComponent } from './shared/components/footer/footer.component';
+import { FloatingAdvisorComponent } from './shared/components/floating-advisor/floating-advisor.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, NavbarComponent, FooterComponent],
+  imports: [CommonModule, RouterOutlet, NavbarComponent, FooterComponent, FloatingAdvisorComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

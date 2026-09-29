@@ -9,9 +9,17 @@ import { UserProfile } from '../../models/compass.models';
 export class AuthService {
   private http = inject(HttpClient);
   private ngZone = inject(NgZone);
-  private baseUrl = typeof window !== 'undefined' && window.location.hostname !== 'localhost'
-    ? '/api/auth'
-    : 'http://localhost:3000/api/auth';
+  private baseUrl = this.resolveBaseUrl();
+
+  private resolveBaseUrl(): string {
+    if (typeof window === 'undefined') return 'http://localhost:3000/api/auth';
+    const { hostname, port, protocol } = window.location;
+    const isLanIp = /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname) || hostname === 'localhost' || hostname === '127.0.0.1';
+    if (port === '4200' || (isLanIp && port !== '3000')) {
+      return `${protocol}//${hostname}:3000/api/auth`;
+    }
+    return '/api/auth';
+  }
   private readonly userStorageKey = 'compass_user';
   private readonly tokenStorageKey = 'compass_token';
   private readonly guestIdKey = 'compass_guest_id';
@@ -36,6 +44,30 @@ export class AuthService {
   }
 
   private initUser() {
+    if (typeof window !== 'undefined') {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const authToken = urlParams.get('auth_token');
+        const authUserRaw = urlParams.get('auth_user');
+        if (authToken && authUserRaw) {
+          const user = JSON.parse(decodeURIComponent(authUserRaw));
+          localStorage.setItem(this.tokenStorageKey, authToken);
+          localStorage.setItem(this.userStorageKey, JSON.stringify(user));
+          this.currentUser.set(user);
+
+          // Clean query params cleanly without reloading page
+          urlParams.delete('auth_token');
+          urlParams.delete('auth_user');
+          const remainingQuery = urlParams.toString();
+          const cleanUrl = window.location.pathname + (remainingQuery ? '?' + remainingQuery : '') + window.location.hash;
+          window.history.replaceState({}, document.title, cleanUrl);
+          return;
+        }
+      } catch (err) {
+        console.warn('Failed parsing auth redirect params:', err);
+      }
+    }
+
     const stored = localStorage.getItem(this.userStorageKey);
     if (stored) {
       try {
@@ -143,6 +175,13 @@ export class AuthService {
   ) {
     if (!container) return;
 
+    // Detect raw IP address (e.g. 192.168.x.x, 10.x.x.x) where Google OAuth is blocked by Google Cloud
+    const isRawIp = typeof window !== 'undefined' && (/^(\d{1,3}\.){3}\d{1,3}$/.test(window.location.hostname) || window.location.hostname.includes(':'));
+    if (isRawIp) {
+      this.renderFallbackGoogleButton(container, callbacks, buttonOptions);
+      return;
+    }
+
     this.getAuthConfig().subscribe({
       next: (config) => {
         const clientId = config.googleClientId;
@@ -150,9 +189,21 @@ export class AuthService {
 
         if (clientId && google?.accounts?.id) {
           try {
-            google.accounts.id.initialize({
+            const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const redirectUri = `${window.location.origin}/api/auth/google/callback`;
+
+            const initConfig: any = {
               client_id: clientId,
-              callback: (response: any) => {
+              auto_select: false,
+              cancel_on_tap_outside: true,
+            };
+
+            if (isMobile) {
+              initConfig.ux_mode = 'redirect';
+              initConfig.login_uri = redirectUri;
+            } else {
+              initConfig.ux_mode = 'popup';
+              initConfig.callback = (response: any) => {
                 this.ngZone.run(() => {
                   if (response?.credential) {
                     this.loginWithGoogle({ credential: response.credential }).subscribe({
@@ -161,8 +212,10 @@ export class AuthService {
                     });
                   }
                 });
-              },
-            });
+              };
+            }
+
+            google.accounts.id.initialize(initConfig);
 
             container.innerHTML = '';
             google.accounts.id.renderButton(container, {

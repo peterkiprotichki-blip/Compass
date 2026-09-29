@@ -19,55 +19,55 @@ import { GoogleSignInComponent } from '../google-sign-in/google-sign-in.componen
         <div class="flex items-center justify-between h-20">
           
           <!-- Brand Logo -->
-          <a routerLink="/" class="flex items-center gap-3 group">
-            <img src="brand/compass-mark.png" alt="Compass" class="h-10 w-10 transition-transform duration-300 group-hover:rotate-12">
-            <span class="text-2xl font-serif font-bold tracking-tight text-ivory">
+          <a routerLink="/" class="flex items-center gap-2.5 sm:gap-3 flex-shrink-0 group">
+            <img src="brand/compass-mark.png" alt="Compass" class="h-9 w-9 sm:h-10 sm:w-10 transition-transform duration-300 group-hover:rotate-12">
+            <span class="text-xl sm:text-2xl font-serif font-bold tracking-tight text-ivory">
               Compass<span class="text-gold">.</span>
             </span>
           </a>
 
           <!-- Desktop Navigation -->
-          <div class="hidden md:flex items-center space-x-8 text-[15px] font-medium">
-            <a routerLink="/" routerLinkActive="text-gold" [routerLinkActiveOptions]="{exact: true}" class="hover:text-gold transition-colors">
+          <div class="hidden xl:flex items-center gap-6 2xl:gap-8 text-sm font-medium flex-shrink-0">
+            <a routerLink="/" routerLinkActive="text-gold" [routerLinkActiveOptions]="{exact: true}" class="whitespace-nowrap hover:text-gold transition-colors">
               {{ lang.t.navHome }}
             </a>
-            <a routerLink="/how-it-works" routerLinkActive="text-gold" class="hover:text-gold transition-colors">
+            <a routerLink="/how-it-works" routerLinkActive="text-gold" class="whitespace-nowrap hover:text-gold transition-colors">
               {{ lang.t.navHowItWorks }}
             </a>
-            <a routerLink="/learn" routerLinkActive="text-gold" class="hover:text-gold transition-colors">
+            <a routerLink="/learn" routerLinkActive="text-gold" class="whitespace-nowrap hover:text-gold transition-colors">
               {{ lang.t.navResources }}
             </a>
-            <a routerLink="/pricing" routerLinkActive="text-gold" class="hover:text-gold transition-colors">
+            <a routerLink="/pricing" routerLinkActive="text-gold" class="whitespace-nowrap hover:text-gold transition-colors">
               {{ lang.t.navPricing }}
             </a>
-            <a routerLink="/profile" routerLinkActive="text-gold" class="hover:text-gold transition-colors flex items-center gap-1.5">
+            <a routerLink="/profile" routerLinkActive="text-gold" class="whitespace-nowrap hover:text-gold transition-colors flex items-center gap-1.5">
               <span>{{ lang.t.navDashboard }}</span>
-              <span *ngIf="auth.currentUser()?.savedPaths?.length" class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold bg-gold text-charcoal rounded-full">
+              <span *ngIf="auth.currentUser()?.savedPaths?.length" class="inline-flex items-center justify-center px-1.5 py-0.2 text-[11px] font-bold bg-gold text-charcoal rounded-full">
                 {{ auth.currentUser()?.savedPaths?.length }}
               </span>
             </a>
-            <a *ngIf="auth.isSuperAdmin()" routerLink="/admin" routerLinkActive="text-gold" class="hover:text-gold transition-colors flex items-center gap-1.5 text-gold font-semibold">
+            <a *ngIf="auth.isSuperAdmin()" routerLink="/admin" routerLinkActive="text-gold" class="whitespace-nowrap hover:text-gold transition-colors flex items-center gap-1.5 text-gold font-semibold">
               <span>Admin</span>
               <span class="text-[10px] px-1.5 py-0.2 rounded bg-gold/20 border border-gold/40">Portal</span>
             </a>
           </div>
 
           <!-- Right actions: Language Switcher, User Dropdown / Sign In, & CTA -->
-          <div class="flex items-center space-x-3 sm:space-x-4">
+          <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             
             <!-- Language Toggle (EN | SW) -->
             <button
               (click)="lang.toggleLanguage()"
-              class="flex items-center bg-forest-deep border border-forest-line px-3 py-1.5 rounded-button text-xs font-semibold uppercase tracking-wider hover:border-gold transition-colors"
+              class="flex items-center bg-forest-deep border border-forest-line px-2.5 py-1.5 rounded-button text-xs font-semibold uppercase tracking-wider hover:border-gold transition-colors flex-shrink-0"
               title="Toggle Language"
             >
               <span [class.text-gold]="lang.currentLang() === 'en'" [class.text-ivory/60]="lang.currentLang() !== 'en'">EN</span>
-              <span class="mx-1.5 text-forest-line">|</span>
+              <span class="mx-1 text-forest-line">|</span>
               <span [class.text-gold]="lang.currentLang() === 'sw'" [class.text-ivory/60]="lang.currentLang() !== 'sw'">SW</span>
             </button>
 
             <!-- User Auth: Logged In Dropdown -->
-            <div *ngIf="auth.currentUser() as user" class="relative">
+            <div *ngIf="auth.currentUser() as user" class="relative flex-shrink-0">
               <button
                 (click)="userMenuOpen = !userMenuOpen"
                 class="flex items-center gap-2 bg-forest-deep/80 hover:bg-forest-deep border border-forest-line px-2.5 py-1.5 rounded-button transition-colors"
@@ -76,18 +76,18 @@ import { GoogleSignInComponent } from '../google-sign-in/google-sign-in.componen
                   *ngIf="user.avatarUrl"
                   [src]="user.avatarUrl"
                   [alt]="user.name"
-                  class="w-7 h-7 rounded-full object-cover border border-gold/60"
+                  class="w-7 h-7 rounded-full object-cover border border-gold/60 flex-shrink-0"
                 />
                 <div
                   *ngIf="!user.avatarUrl"
-                  class="w-7 h-7 rounded-full bg-gold text-charcoal font-bold text-xs flex items-center justify-center uppercase"
+                  class="w-7 h-7 rounded-full bg-gold text-charcoal font-bold text-xs flex items-center justify-center uppercase flex-shrink-0"
                 >
                   {{ user.name.charAt(0) }}
                 </div>
-                <span class="hidden lg:inline text-xs font-semibold text-ivory max-w-[100px] truncate">
+                <span class="hidden sm:inline text-xs font-semibold text-ivory max-w-[110px] truncate whitespace-nowrap">
                   {{ user.name.split(' ')[0] }}
                 </span>
-                <svg class="w-3.5 h-3.5 text-ivory/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg class="w-3.5 h-3.5 text-ivory/60 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
@@ -112,6 +112,17 @@ import { GoogleSignInComponent } from '../google-sign-in/google-sign-in.componen
                   <span>{{ lang.isSwahili() ? 'Dashibodi Yangu' : 'My Dashboard' }}</span>
                 </a>
                 <a
+                  *ngIf="latestResultId"
+                  (click)="userMenuOpen = false"
+                  [routerLink]="['/results', latestResultId]"
+                  class="flex items-center gap-2 px-4 py-2 text-xs text-gold hover:text-gold-soft hover:bg-forest transition-colors font-medium border-t border-forest-line/20"
+                >
+                  <svg class="w-4 h-4 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  <span>{{ lang.isSwahili() ? 'Matokeo Yangu ya Tathmini' : 'My Assessment Results' }}</span>
+                </a>
+                <a
                   *ngIf="auth.isSuperAdmin()"
                   (click)="userMenuOpen = false"
                   routerLink="/admin"
@@ -134,24 +145,11 @@ import { GoogleSignInComponent } from '../google-sign-in/google-sign-in.componen
               </div>
             </div>
 
-            <!-- Direct Quick Sign Out Button when Logged In -->
-            <button
-              *ngIf="auth.currentUser()"
-              (click)="logout()"
-              class="hidden sm:inline-flex items-center text-xs text-rose-300 hover:text-rose-100 hover:bg-rose-500/20 px-2.5 py-1.5 rounded-button border border-rose-400/30 transition-colors"
-              title="Sign Out"
-            >
-              <svg class="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              <span>{{ lang.isSwahili() ? 'Toka' : 'Sign Out' }}</span>
-            </button>
-
             <!-- User Auth: Logged Out "Sign In" Button -->
             <a
               *ngIf="!auth.currentUser()"
               routerLink="/login"
-              class="inline-flex items-center text-xs font-semibold text-ivory hover:text-gold px-3.5 py-2 rounded-button border border-forest-line hover:border-gold transition-colors"
+              class="inline-flex items-center text-xs font-semibold text-ivory hover:text-gold px-3.5 py-2 rounded-button border border-forest-line hover:border-gold transition-colors flex-shrink-0"
             >
               {{ lang.isSwahili() ? 'Ingia' : 'Sign In' }}
             </a>
@@ -159,18 +157,18 @@ import { GoogleSignInComponent } from '../google-sign-in/google-sign-in.componen
             <!-- Primary Action Button -->
             <a
               routerLink="/pathfinder"
-              class="hidden sm:inline-flex items-center justify-center bg-gold hover:bg-gold-soft text-charcoal font-semibold text-[15px] px-6 py-2.5 rounded-button shadow-md transition-all duration-200 hover:shadow-gold-glow"
+              class="btn-gold-luxury hidden sm:inline-flex items-center justify-center text-xs sm:text-sm font-bold px-4 sm:px-5 py-2 sm:py-2.5 rounded-button transition-all duration-200 hover:shadow-gold-glow whitespace-nowrap flex-shrink-0"
             >
               <span>{{ lang.t.navGetStarted }}</span>
-              <svg class="w-4 h-4 ml-1.5 -mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+              <svg class="w-3.5 h-3.5 ml-1.5 -mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
               </svg>
             </a>
 
             <!-- Mobile menu button toggle -->
             <button
               (click)="mobileMenuOpen = !mobileMenuOpen"
-              class="md:hidden p-2 text-ivory hover:text-gold focus:outline-none"
+              class="xl:hidden p-2 text-ivory hover:text-gold focus:outline-none flex-shrink-0"
               aria-label="Toggle menu"
             >
               <svg *ngIf="!mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -186,7 +184,7 @@ import { GoogleSignInComponent } from '../google-sign-in/google-sign-in.componen
       </div>
 
       <!-- Mobile Dropdown Menu -->
-      <div *ngIf="mobileMenuOpen" class="md:hidden bg-forest-deep border-b border-forest-line px-4 pt-3 pb-6 space-y-3 animate-fadeIn max-h-[calc(100dvh-5rem)] overflow-y-auto shadow-2xl">
+      <div *ngIf="mobileMenuOpen" class="xl:hidden bg-forest-deep border-b border-forest-line px-4 pt-3 pb-6 space-y-3 animate-fadeIn max-h-[calc(100dvh-5rem)] overflow-y-auto shadow-2xl">
         <!-- Logged in user info header in mobile menu -->
         <div *ngIf="auth.currentUser() as user" class="p-3 bg-forest rounded-card border border-forest-line/30 flex items-center justify-between">
           <div class="flex items-center gap-3">
@@ -224,6 +222,9 @@ import { GoogleSignInComponent } from '../google-sign-in/google-sign-in.componen
         <a (click)="mobileMenuOpen = false" routerLink="/profile" class="block text-ivory hover:text-gold py-2 font-medium">
           {{ lang.t.navDashboard }}
         </a>
+        <a *ngIf="latestResultId" (click)="mobileMenuOpen = false" [routerLink]="['/results', latestResultId]" class="block text-gold hover:text-gold-soft py-2 font-medium">
+          {{ lang.isSwahili() ? '★ Matokeo Yangu (Ripoti)' : '★ My Assessment Results' }}
+        </a>
         <a *ngIf="auth.isSuperAdmin()" (click)="mobileMenuOpen = false" routerLink="/admin" class="block text-gold hover:underline py-2 font-medium">
           Admin Portal
         </a>
@@ -243,7 +244,7 @@ import { GoogleSignInComponent } from '../google-sign-in/google-sign-in.componen
           <a
             (click)="mobileMenuOpen = false"
             routerLink="/pathfinder"
-            class="w-full flex items-center justify-center bg-gold text-charcoal font-semibold py-3 rounded-button shadow"
+            class="btn-gold-luxury w-full flex items-center justify-center py-3.5 rounded-button shadow-gold-btn"
           >
             {{ lang.t.navGetStarted }}
           </a>
@@ -336,6 +337,13 @@ export class NavbarComponent {
   showAuthModal = false;
   isRegisterMode = false;
   authError = '';
+
+  get latestResultId(): string | null {
+    if (typeof localStorage !== 'undefined') {
+      return localStorage.getItem('compass_last_result_id');
+    }
+    return null;
+  }
 
   authForm = {
     name: '',

@@ -1,6 +1,6 @@
-import { Component, OnInit, inject, Input } from '@angular/core';
+import { Component, OnInit, inject, Input, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { LanguageService } from '../../core/services/language.service';
 import { Journey } from '../../models/compass.models';
@@ -12,12 +12,36 @@ import confetti from 'canvas-confetti';
   standalone: true,
   imports: [CommonModule, RouterModule, WeekBlockComponent],
   template: `
-    <div class="min-h-screen bg-ivory py-10 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-10" *ngIf="journey">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="min-h-[60vh] flex flex-col items-center justify-center space-y-4 py-20 bg-ivory">
+      <div class="w-10 h-10 border-3 border-gold border-t-transparent rounded-full animate-spin"></div>
+      <p class="text-sm font-medium text-charcoal/70">
+        {{ lang.isSwahili() ? 'Inapakia safari yako ya utekelezaji...' : 'Loading your 30-day launch roadmap...' }}
+      </p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !isLoading" class="min-h-[50vh] flex flex-col items-center justify-center text-center p-8 space-y-4 max-w-md mx-auto my-12 bg-white rounded-sheet border border-forest-line/15 shadow-sm">
+      <div class="w-14 h-14 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700">
+        <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+      </div>
+      <h3 class="font-serif font-bold text-xl text-charcoal">
+        {{ lang.isSwahili() ? 'Safari Haikupatikana' : 'Journey Not Found' }}
+      </h3>
+      <p class="text-xs text-charcoal/70">{{ error }}</p>
+      <a routerLink="/profile" class="px-5 py-2.5 rounded-button bg-forest text-gold text-xs font-semibold hover:bg-forest-deep transition-all">
+        {{ lang.isSwahili() ? '← Rudi kwenye Dashibodi' : '← Return to Dashboard' }}
+      </a>
+    </div>
+
+    <div class="min-h-screen bg-ivory py-10 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-10" *ngIf="journey && !isLoading">
       
       <!-- Back Link -->
       <div>
-        <a routerLink="/profile" class="inline-flex items-center gap-1.5 text-xs font-semibold text-charcoal/70 hover:text-charcoal">
-          ← Back to Dashboard
+        <a routerLink="/profile" class="inline-flex items-center gap-1.5 text-xs font-semibold text-charcoal/70 hover:text-charcoal transition-colors">
+          {{ lang.isSwahili() ? '← Rudi kwenye Dashibodi' : '← Back to Dashboard' }}
         </a>
       </div>
 
@@ -52,10 +76,10 @@ import confetti from 'canvas-confetti';
           </svg>
         </div>
         <h3 class="font-serif font-bold text-xl text-emerald-900">
-          Congratulations! You completed your 30-Day Launch Roadmap!
+          {{ lang.isSwahili() ? 'Hongera! Umekamilisha Mpango wa Siku 30!' : 'Congratulations! You completed your 30-Day Launch Roadmap!' }}
         </h3>
         <p class="text-xs text-emerald-800">
-          Your business is officially launched. Keep executing daily systems for sustainable growth.
+          {{ lang.isSwahili() ? 'Biashara yako sasa imezinduliwa rasmi. Endelea kutekeleza taratibu za kila siku.' : 'Your business is officially launched. Keep executing daily systems for sustainable growth.' }}
         </p>
       </div>
 
@@ -87,21 +111,46 @@ export class JourneyTrackerPageComponent implements OnInit {
   @Input() id!: string;
   api = inject(ApiService);
   lang = inject(LanguageService);
+  route = inject(ActivatedRoute);
+  cdr = inject(ChangeDetectorRef);
 
   journey: Journey | null = null;
+  isLoading = true;
+  error: string | null = null;
 
   ngOnInit() {
-    if (this.id) {
-      this.loadJourney();
-    }
+    this.route.paramMap.subscribe(params => {
+      const journeyId = params.get('id') || this.id;
+      if (journeyId) {
+        this.loadJourney(journeyId);
+      } else {
+        this.isLoading = false;
+        this.error = 'No journey identifier provided.';
+        this.cdr.detectChanges();
+      }
+    });
   }
 
-  loadJourney() {
-    this.api.getJourneyById(this.id).subscribe({
+  loadJourney(journeyId: string) {
+    this.isLoading = true;
+    this.error = null;
+    this.cdr.detectChanges();
+
+    this.api.getJourneyById(journeyId).subscribe({
       next: res => {
         this.journey = res;
+        this.isLoading = false;
+        this.cdr.detectChanges();
       },
-      error: err => console.error(err)
+      error: err => {
+        console.error('Failed to load journey', err);
+        this.journey = null;
+        this.isLoading = false;
+        this.error = this.lang.isSwahili()
+          ? 'Samahani, hatukuweza kupata safari hii ya biashara.'
+          : 'Sorry, we could not find this business journey.';
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -110,6 +159,7 @@ export class JourneyTrackerPageComponent implements OnInit {
     this.api.toggleJourneyTask(this.journey._id, taskId).subscribe({
       next: updated => {
         this.journey = updated;
+        this.cdr.detectChanges();
         if (updated.isCompleted) {
           confetti({
             particleCount: 100,
@@ -117,7 +167,11 @@ export class JourneyTrackerPageComponent implements OnInit {
             origin: { y: 0.6 }
           });
         }
+      },
+      error: err => {
+        console.error('Failed to toggle task', err);
       }
     });
   }
 }
+

@@ -1,11 +1,11 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ApiService } from '../../core/services/api.service';
 import { LanguageService } from '../../core/services/language.service';
-import { Journey, Business } from '../../models/compass.models';
+import { Journey, Business, AssessmentResult } from '../../models/compass.models';
 import { GoogleSignInComponent } from '../../shared/components/google-sign-in/google-sign-in.component';
 
 @Component({
@@ -60,6 +60,154 @@ import { GoogleSignInComponent } from '../../shared/components/google-sign-in/go
           >
             {{ lang.isSwahili() ? 'Ingia / Fungua Akaunti' : 'Sign In / Create Account' }}
           </a>
+        </div>
+      </div>
+
+      <!-- Pathfinder Assessment Progress -->
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-serif font-bold text-charcoal">
+            {{ lang.isSwahili() ? 'Maendlezo ya Tathmini ya Pathfinder' : 'Pathfinder Assessment Progress' }}
+          </h2>
+          <span class="text-xs text-charcoal/60">
+            {{ results.length }} {{ lang.isSwahili() ? 'zimekamilishwa' : 'completed' }}
+          </span>
+        </div>
+
+        <!-- In-progress questionnaire (autosaved draft) -->
+        <div *ngIf="draft && draftAnswered > 0" class="bg-white p-6 rounded-card border border-gold/40 shadow-light-sm space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="space-y-1">
+              <span class="text-[10px] font-semibold uppercase tracking-widest text-gold">
+                {{ lang.isSwahili() ? 'Inaendelea' : 'In Progress' }}
+              </span>
+              <h3 class="font-serif font-bold text-lg text-charcoal">
+                {{ lang.isSwahili() ? 'Maswali ya Pathfinder' : 'Pathfinder Questionnaire' }}
+              </h3>
+              <p class="text-xs text-charcoal/60">
+                {{ lang.isSwahili()
+                  ? 'Umajibiwa ' + draftAnswered + ' kati ya ' + totalQuestions + ' maswali. Maendlezo yako yamehifadhiwa.'
+                  : draftAnswered + ' of ' + totalQuestions + ' questions answered. Your progress is saved automatically.' }}
+              </p>
+            </div>
+            <a
+              routerLink="/pathfinder"
+              class="bg-gold hover:bg-gold-soft text-charcoal text-xs font-bold px-5 py-2.5 rounded-button shadow transition-colors whitespace-nowrap self-start sm:self-center"
+            >
+              {{ lang.isSwahili() ? 'Endelea ulipoachia →' : 'Continue where you left off →' }}
+            </a>
+          </div>
+
+          <div class="w-full bg-forest/10 rounded-full h-1.5 overflow-hidden">
+            <div class="bg-gold h-full rounded-full transition-all duration-300" [style.width.%]="draftProgressPercent"></div>
+          </div>
+        </div>
+
+        <!-- Latest completed assessment: Rich Hero Showcase -->
+        <div *ngIf="latestResult as r" class="bg-gradient-to-br from-forest-deep via-forest to-forest rounded-sheet p-6 sm:p-8 text-ivory border-2 border-gold/40 shadow-2xl relative overflow-hidden space-y-6">
+          <div class="absolute -top-12 -right-12 w-64 h-64 bg-gold/15 rounded-full blur-3xl pointer-events-none"></div>
+
+          <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div class="space-y-3 max-w-2xl">
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-pill bg-gold/20 border border-gold/40 text-[11px] font-bold text-gold uppercase tracking-wider">
+                  <svg class="w-3.5 h-3.5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  <span>{{ lang.isSwahili() ? 'WASIFU WAKO WA UJASIRIAMALI' : 'YOUR ENTREPRENEUR ARCHETYPE' }}</span>
+                </span>
+                <span *ngIf="r.createdAt" class="text-xs text-ivory/50">· {{ r.createdAt | date:'mediumDate' }}</span>
+              </div>
+
+              <div class="space-y-1">
+                <h3 class="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-ivory tracking-tight">
+                  {{ lang.isSwahili() ? r.primaryArchetypeSw : r.primaryArchetype }}
+                </h3>
+                <p class="text-xs sm:text-sm text-ivory/80 leading-relaxed font-sans line-clamp-2">
+                  {{ r.archetypeSummary }}
+                </p>
+              </div>
+
+              <!-- Traits pills -->
+              <div class="flex flex-wrap gap-2 pt-1">
+                <span *ngFor="let trait of r.traitPills" class="px-2.5 py-0.5 rounded-pill bg-forest-deep border border-forest-line/60 text-[11px] text-gold font-medium">
+                  {{ trait }}
+                </span>
+                <span *ngIf="r.secondaryArchetype" class="px-2.5 py-0.5 rounded-pill bg-forest-deep/60 border border-forest-line/40 text-[11px] text-ivory/70">
+                  Secondary: {{ lang.isSwahili() ? r.secondaryArchetypeSw : r.secondaryArchetype }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Readiness Ring & Score -->
+            <div class="flex sm:flex-col items-center justify-between sm:justify-center p-4 bg-forest-deep/90 rounded-card border border-forest-line/50 min-w-[200px] text-center gap-2">
+              <div>
+                <span class="font-serif font-bold text-3xl sm:text-4xl text-gold">{{ r.readinessScore }}%</span>
+                <span class="block text-[10px] uppercase font-bold text-ivory/60 tracking-wider">Readiness Score</span>
+              </div>
+              <span class="text-xs font-semibold px-2.5 py-0.5 rounded-pill bg-gold/15 text-gold border border-gold/30">
+                {{ r.riskProfile }} Risk · {{ r.readinessVerdict }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Top Recommendation & Actions Bar -->
+          <div class="relative z-10 pt-4 border-t border-forest-line/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div *ngIf="r.topMatches?.length" class="flex items-center gap-2 text-xs">
+              <span class="text-ivory/60">{{ lang.isSwahili() ? 'Biashara Iliyopendekezwa Zaidi:' : 'Top Matched Venture:' }}</span>
+              <span class="font-bold text-gold underline underline-offset-2">
+                {{ lang.isSwahili() ? r.topMatches[0].nameSw : r.topMatches[0].name }}
+              </span>
+              <span class="text-[11px] text-ivory/40">({{ r.topMatches[0].matchScore }}% match)</span>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3">
+              <a
+                [routerLink]="['/results', r._id]"
+                class="bg-gradient-to-r from-gold-soft via-gold to-gold-dark hover:brightness-105 text-charcoal font-bold text-xs sm:text-sm px-6 py-2.5 rounded-button shadow-gold-btn transition-all flex items-center gap-2"
+              >
+                <span>{{ lang.isSwahili() ? 'Fungua Ripoti Kamili ya Matokeo' : 'Open Full Assessment Report' }}</span>
+                <span>→</span>
+              </a>
+              <button
+                *ngIf="r.topMatches?.length"
+                (click)="onStartPlan(r)"
+                class="bg-forest-deep hover:bg-forest border border-forest-line/60 text-ivory text-xs font-semibold px-4 py-2.5 rounded-button transition-colors"
+              >
+                {{ lang.isSwahili() ? 'Anza Mpango wa Siku 30' : 'Start 30-Day Plan' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty state: nothing answered yet -->
+        <div *ngIf="!draft && results.length === 0" class="bg-white p-8 rounded-card border border-forest-line/10 text-center space-y-3">
+          <p class="text-xs text-charcoal/60">
+            {{ lang.isSwahili() ? 'Bado hujajibu maswali ya tathmini. Maendlezo yako yataonekapa hapa.' : 'You have not answered the assessment questions yet. Your progress will show up here.' }}
+          </p>
+          <a routerLink="/pathfinder" class="inline-block text-xs font-semibold text-forest underline">
+            {{ lang.isSwahili() ? 'Anza Tathmini ya Pathfinder →' : 'Start the Pathfinder Assessment →' }}
+          </a>
+        </div>
+
+        <!-- Previous assessments -->
+        <div *ngIf="results.length > 1" class="space-y-3">
+          <h3 class="text-xs font-semibold uppercase tracking-widest text-charcoal/60">
+            {{ lang.isSwahili() ? 'Tathmini Zilizotangulia' : 'Previous Assessments' }}
+          </h3>
+          <div class="bg-white divide-y divide-forest-line/10 rounded-card border border-forest-line/15">
+            <div *ngFor="let r of results | slice:1" class="flex items-center justify-between gap-4 p-4">
+              <div>
+                <p class="font-serif font-bold text-sm text-charcoal">{{ lang.isSwahili() ? r.primaryArchetypeSw : r.primaryArchetype }}</p>
+                <p class="text-[11px] text-charcoal/50">
+                  {{ r.createdAt | date:'mediumDate' }} · {{ r.readinessScore }}/100 · {{ r.riskProfile }}
+                </p>
+              </div>
+              <a [routerLink]="['/results', r._id]" class="text-xs font-semibold text-forest hover:text-gold whitespace-nowrap">
+                {{ lang.isSwahili() ? 'Tazama →' : 'View →' }}
+              </a>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -224,9 +372,13 @@ export class ProfileComponent implements OnInit {
   api = inject(ApiService);
   router = inject(Router);
   lang = inject(LanguageService);
+  cdr = inject(ChangeDetectorRef);
 
   journeys: Journey[] = [];
   savedBusinesses: Business[] = [];
+  results: AssessmentResult[] = [];
+  draft: any = null;
+  totalQuestions = 22;
 
   showAuthModal = false;
   isRegisterMode = false;
@@ -244,8 +396,58 @@ export class ProfileComponent implements OnInit {
   loadUserData() {
     const userId = this.auth.getEffectiveUserId();
     this.api.getUserJourneys(userId).subscribe({
-      next: res => this.journeys = res,
+      next: res => {
+        this.journeys = res || [];
+        this.cdr.detectChanges();
+      },
       error: err => console.error(err)
+    });
+
+    this.api.getUserResults(userId).subscribe({
+      next: res => {
+        this.results = res || [];
+        if (this.results.length === 0) {
+          const cachedResultId = typeof localStorage !== 'undefined' ? localStorage.getItem('compass_last_result_id') : null;
+          if (cachedResultId) {
+            this.api.getResultById(cachedResultId).subscribe({
+              next: cached => {
+                if (cached) {
+                  this.results = [cached];
+                  this.cdr.detectChanges();
+                }
+              }
+            });
+          }
+        } else if (this.results[0]?._id) {
+          localStorage.setItem('compass_last_result_id', this.results[0]._id);
+        }
+        this.cdr.detectChanges();
+      },
+      error: err => {
+        console.error(err);
+        const cachedResultId = typeof localStorage !== 'undefined' ? localStorage.getItem('compass_last_result_id') : null;
+        if (cachedResultId) {
+          this.api.getResultById(cachedResultId).subscribe({
+            next: cached => {
+              if (cached) {
+                this.results = [cached];
+                this.cdr.detectChanges();
+              }
+            }
+          });
+        }
+      }
+    });
+
+    this.api.getAssessmentProgress(userId).subscribe({
+      next: res => {
+        this.draft = res;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.draft = null;
+        this.cdr.detectChanges();
+      }
     });
 
     const user = this.auth.currentUser();
@@ -253,9 +455,32 @@ export class ProfileComponent implements OnInit {
       this.api.getBusinesses().subscribe({
         next: all => {
           this.savedBusinesses = all.filter(b => user.savedPaths.includes(b.slug));
+          this.cdr.detectChanges();
         }
       });
     }
+  }
+
+  get latestResult(): AssessmentResult | null {
+    return this.results.length > 0 ? this.results[0] : null;
+  }
+
+  get draftAnswered(): number {
+    return this.draft?.answers ? Object.keys(this.draft.answers).length : 0;
+  }
+
+  get draftProgressPercent(): number {
+    return Math.round((this.draftAnswered / this.totalQuestions) * 100);
+  }
+
+  onStartPlan(result: AssessmentResult) {
+    const topMatch = result.topMatches?.[0];
+    if (!topMatch) return;
+    const userId = this.auth.getEffectiveUserId();
+    this.api.startJourney(userId, topMatch.businessId).subscribe({
+      next: journey => this.router.navigate(['/journey', journey._id]),
+      error: err => console.error(err)
+    });
   }
 
   onAuthSubmit(event: Event) {
@@ -295,6 +520,8 @@ export class ProfileComponent implements OnInit {
     this.auth.logout();
     this.savedBusinesses = [];
     this.journeys = [];
+    this.results = [];
+    this.draft = null;
     this.router.navigate(['/login']);
   }
 }
