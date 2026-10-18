@@ -52,11 +52,78 @@ export class GrowthController {
       date: string;
       sales: number;
       expenses: number;
+      cashTotal?: number;
+      tillTotal?: number;
+      departmentBreakdown?: any[];
+      expenseBreakdown?: any[];
+      itemsSold?: ItemSold[];
+      notes?: string;
+      rawText?: string;
+    },
+  ) {
+    return this.growthService.recordDailyTracking(id, body);
+  }
+
+  @Post('intake/:id/daily/bulk')
+  async recordBulkDailyTracking(
+    @Param('id') id: string,
+    @Body() body: { records: any[] },
+  ) {
+    return this.growthService.recordBulkDailyTracking(id, body.records || []);
+  }
+
+  @Patch('intake/:id/daily/:recordId')
+  async updateDailyRecord(
+    @Param('id') id: string,
+    @Param('recordId') recordId: string,
+    @Body()
+    body: {
+      date: string;
+      sales?: number;
+      expenses?: number;
+      cashTotal?: number;
+      tillTotal?: number;
+      departmentBreakdown?: any[];
+      expenseBreakdown?: any[];
       itemsSold?: ItemSold[];
       notes?: string;
     },
   ) {
-    return this.growthService.recordDailyTracking(id, body);
+    return this.growthService.updateDailyRecord(id, recordId, body);
+  }
+
+  @Post('intake/:id/ai-analysis')
+  async runAiSalesAnalysis(
+    @Param('id') id: string,
+    @Body('timeframe') bodyTimeframe?: string,
+    @Query('timeframe') queryTimeframe?: string,
+  ) {
+    const timeframe = bodyTimeframe || queryTimeframe || 'all';
+    return this.growthService.runAiSalesAnalysis(id, timeframe);
+  }
+
+  @Delete('intake/:id/daily/:recordId')
+  async deleteDailyRecord(
+    @Param('id') id: string,
+    @Param('recordId') recordId: string,
+  ) {
+    return this.growthService.deleteDailyRecord(id, recordId);
+  }
+
+  @Post('intake/:id/departments')
+  async addDepartment(
+    @Param('id') id: string,
+    @Body('department') department: string,
+  ) {
+    return this.growthService.addDepartment(id, department);
+  }
+
+  @Delete('intake/:id/departments/:department')
+  async deleteDepartment(
+    @Param('id') id: string,
+    @Param('department') department: string,
+  ) {
+    return this.growthService.deleteDepartment(id, department);
   }
 
   @Post('intake/:id/stock')

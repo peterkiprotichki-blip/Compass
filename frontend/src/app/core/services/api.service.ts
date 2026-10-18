@@ -126,11 +126,40 @@ export class ApiService {
       date: string;
       sales: number;
       expenses: number;
+      cashTotal?: number;
+      tillTotal?: number;
+      departmentBreakdown?: any[];
+      expenseBreakdown?: any[];
       itemsSold?: Array<{ itemName: string; quantity: number; sellingPrice: number; subtotal: number }>;
       notes?: string;
+      rawText?: string;
     },
   ): Observable<any> {
     return this.http.post(`${this.baseUrl}/growth/intake/${id}/daily`, payload);
+  }
+
+  recordBulkDailyTracking(id: string, records: any[]): Observable<any> {
+    return this.http.post(`${this.baseUrl}/growth/intake/${id}/daily/bulk`, { records });
+  }
+
+  updateDailyRecord(id: string, recordId: string, payload: any): Observable<any> {
+    return this.http.patch(`${this.baseUrl}/growth/intake/${id}/daily/${recordId}`, payload);
+  }
+
+  runAiSalesAnalysis(id: string, timeframe: string = 'all'): Observable<any> {
+    return this.http.post(`${this.baseUrl}/growth/intake/${id}/ai-analysis`, { timeframe });
+  }
+
+  deleteDailyRecord(id: string, recordId: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/growth/intake/${id}/daily/${recordId}`);
+  }
+
+  addDepartment(id: string, department: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/growth/intake/${id}/departments`, { department });
+  }
+
+  deleteDepartment(id: string, department: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/growth/intake/${id}/departments/${encodeURIComponent(department)}`);
   }
 
   addStockItem(

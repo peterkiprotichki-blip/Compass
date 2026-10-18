@@ -9,6 +9,7 @@ export interface StockItem {
   quantity: number;
   buyingPrice: number;
   sellingPrice: number;
+  department?: string;
 }
 
 export interface ItemSold {
@@ -16,6 +17,21 @@ export interface ItemSold {
   quantity: number;
   sellingPrice: number;
   subtotal: number;
+  department?: string;
+}
+
+export interface DepartmentSale {
+  department: string;
+  cash: number;
+  till: number;
+  total: number;
+  notes?: string;
+}
+
+export interface ExpenseItem {
+  category: string;
+  amount: number;
+  paymentMethod?: string; // 'cash' | 'till'
 }
 
 export interface DailyRecord {
@@ -24,8 +40,13 @@ export interface DailyRecord {
   sales: number;
   expenses: number;
   estimatedProfit: number;
+  cashTotal?: number;
+  tillTotal?: number;
+  departmentBreakdown?: DepartmentSale[];
+  expenseBreakdown?: ExpenseItem[];
   itemsSold?: ItemSold[];
   notes?: string;
+  rawText?: string;
   createdAt?: Date;
 }
 
@@ -33,6 +54,15 @@ export interface DailyRecord {
 export class GrowIntake {
   @Prop({ type: String, default: null })
   userId?: string;
+
+  @Prop({ type: String, default: '' })
+  businessName?: string;
+
+  @Prop({ type: String, default: 'Main Branch' })
+  branchName?: string;
+
+  @Prop({ type: [String], default: ['CHIPS', 'SHOP', 'BEAUTY', 'SALAD', 'CORN'] })
+  departments: string[];
 
   // 1. Revised Onboarding: Business Basics
   @Prop({ required: true })

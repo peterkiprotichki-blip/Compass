@@ -192,4 +192,139 @@ Provide a JSON response (strictly JSON without markdown code fences):
       return null;
     }
   }
+
+  async generateSalesAnalysis(data: {
+    businessName: string;
+    businessType: string;
+    branchName: string;
+    timeframe: string;
+    recordsCount: number;
+    dateRange: string;
+    totalSales: number;
+    totalExpenses: number;
+    netProfit: number;
+    totalTill: number;
+    totalCash: number;
+    departmentBreakdown: Record<string, any>;
+    expenseBreakdown: Record<string, number>;
+    dailyTrend: Array<{ date: string; sales: number; expenses: number; profit: number }>;
+  }) {
+    const profitMargin = data.totalSales > 0 ? Math.round((data.netProfit / data.totalSales) * 100) : 0;
+    const tillPercent = (data.totalTill + data.totalCash) > 0 ? Math.round((data.totalTill / (data.totalTill + data.totalCash)) * 100) : 0;
+
+    const sortedDepts = Object.entries(data.departmentBreakdown || {})
+      .map(([name, d]: [string, any]) => ({ name, sales: d.sales || 0, till: d.till || 0, cash: d.cash || 0 }))
+      .sort((a, b) => b.sales - a.sales);
+
+    const topDept = sortedDepts[0]?.name || 'Primary Unit';
+
+    const fallback = {
+      headline: `Compass AI Diagnostic for ${data.businessName} (${data.timeframe.toUpperCase()})`,
+      headlineSw: `Uchambuzi wa Compass AI kwa ${data.businessName} (${data.timeframe.toUpperCase()})`,
+      executiveSummary: `During the selected period (${data.dateRange}, ${data.recordsCount} days), ${data.businessName} generated KSh ${data.totalSales.toLocaleString()} in sales with KSh ${data.totalExpenses.toLocaleString()} in operating expenses, resulting in an estimated net profit of KSh ${data.netProfit.toLocaleString()} (${profitMargin}% margin).`,
+      executiveSummarySw: `Katika kipindi hiki (${data.dateRange}, siku ${data.recordsCount}), biashara ya ${data.businessName} iliingiza mauzo ya KSh ${data.totalSales.toLocaleString()} dhidi ya matumizi ya KSh ${data.totalExpenses.toLocaleString()}, ikizalisha makadirio ya faida halisi ya KSh ${data.netProfit.toLocaleString()} (faida ya ${profitMargin}%).`,
+      departmentInsights: sortedDepts.map(d => ({
+        department: d.name,
+        comment: `${d.name} generated KSh ${d.sales.toLocaleString()} (${data.totalSales > 0 ? Math.round((d.sales / data.totalSales) * 100) : 0}% of revenue).`,
+        priority: d.name === topDept ? 'Primary Engine' : 'Growth Contributor'
+      })),
+      cashFlowAdvice: `${tillPercent}% of collections entered through M-Pesa Till. Maintain float discipline by sweeping Till funds daily into an official business account to separate business capital from personal spending.`,
+      cashFlowAdviceSw: `Asilimia ${tillPercent}% ya malipo yaliingia kwa njia ya M-Pesa Till. Weka utaratibu wa kuhamisha pesa za Till kila jioni kwenye akaunti ya biashara ili kulinda mtaji.`,
+      expenseAudit: `Total operating expenses represent ${data.totalSales > 0 ? Math.round((data.totalExpenses / data.totalSales) * 100) : 0}% of sales. Compare bulk inventory expenditure against finished product yield to minimize stock waste.`,
+      actionableRecommendations: [
+        `Prioritize stock and staffing around ${topDept} to ensure zero stockouts during peak revenue windows.`,
+        `For lower-volume units, experiment with bundling offers to cross-sell existing foot traffic.`,
+        `Reconcile daily Till and Cash balances every evening before closing.`,
+        `Track batch ingredient or inventory yields directly to maintain at least 40% gross margins.`
+      ],
+      actionableRecommendationsSw: [
+        `Imarisha upatikanaji wa mzigo na huduma kwenye kitengo cha ${topDept} hasa siku za mauzo ya juu.`,
+        `Kwa vitengo vyenye mauzo madogo, unganisha huduma zao (offers) ili wateja wanunue vitu zaidi.`,
+        `Weka hesabu sawa ya pesa taslimu na Till kila siku kabla ya kufunga duka.`,
+        `Fuatilia faida halisi ya kila mzigo mkubwa unaonunuliwa ili kuhakikisha faida haishuki chini ya 40%.`
+      ]
+    };
+
+    if (!this.aiClient) {
+      return fallback;
+    }
+
+    try {
+      const prompt = `
+You are Compass AI, senior business intelligence advisor for African small businesses and retail shops.
+Analyze this real business operational performance data for:
+- Business: ${data.businessName} (${data.businessType}, Branch: ${data.branchName})
+- Timeframe: ${data.timeframe} (${data.dateRange}, ${data.recordsCount} days recorded)
+- Total Sales: KES ${data.totalSales}
+- Total Expenses: KES ${data.totalExpenses}
+- Net Profit: KES ${data.netProfit} (${profitMargin}% margin)
+- Payment Channels: Till (M-Pesa) KES ${data.totalTill} (${tillPercent}%), Cash KES ${data.totalCash} (${100 - tillPercent}%)
+- Departments / Units Performance: ${JSON.stringify(data.departmentBreakdown)}
+- Expenses Breakdown: ${JSON.stringify(data.expenseBreakdown)}
+- Daily Sales & Profit Trend: ${JSON.stringify(data.dailyTrend)}
+
+Deliver an incisive, highly practical diagnosis. Address the owner directly with encouragement and sharp financial acumen.
+Return STRICT JSON ONLY without markdown fences matching:
+{
+  "headline": "Short punchy diagnostic title",
+  "headlineSw": "Swahili headline",
+  "executiveSummary": "2-3 sentences evaluating the period's volume, margin health, and momentum.",
+  "executiveSummarySw": "Swahili translation of executive summary.",
+  "departmentInsights": [
+    { "department": "DEPT_NAME", "comment": "Concise specific observation", "priority": "High / Medium / Low" }
+  ],
+  "cashFlowAdvice": "Concrete recommendation on Till vs Cash liquidity and theft/leakage prevention.",
+  "cashFlowAdviceSw": "Swahili translation of cashFlowAdvice.",
+  "expenseAudit": "Specific evaluation of where money is leaking or how batch costs should be managed.",
+  "actionableRecommendations": [
+    "Step 1: Specific action to take",
+    "Step 2: Specific action to take",
+    "Step 3: Specific action to take",
+    "Step 4: Specific action to take"
+  ],
+  "actionableRecommendationsSw": [
+    "Hatua 1: ...",
+    "Hatua 2: ...",
+    "Hatua 3: ...",
+    "Hatua 4: ..."
+  ]
+}
+`;
+
+      const response = await Promise.race([
+        this.aiClient.models.generateContent({
+          model: this.modelName,
+          contents: prompt,
+          config: {
+            thinkingConfig: { thinkingBudget: 0 },
+            maxOutputTokens: 650,
+            temperature: 0.2,
+          },
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('AI response timed out after 6000ms')), 6000),
+        ),
+      ]);
+
+      const text = response.text || '';
+      const cleanJson = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const parsed = JSON.parse(cleanJson);
+
+      return {
+        headline: parsed.headline || fallback.headline,
+        headlineSw: parsed.headlineSw || fallback.headlineSw,
+        executiveSummary: parsed.executiveSummary || fallback.executiveSummary,
+        executiveSummarySw: parsed.executiveSummarySw || fallback.executiveSummarySw,
+        departmentInsights: parsed.departmentInsights || fallback.departmentInsights,
+        cashFlowAdvice: parsed.cashFlowAdvice || fallback.cashFlowAdvice,
+        cashFlowAdviceSw: parsed.cashFlowAdviceSw || fallback.cashFlowAdviceSw,
+        expenseAudit: parsed.expenseAudit || fallback.expenseAudit,
+        actionableRecommendations: parsed.actionableRecommendations || fallback.actionableRecommendations,
+        actionableRecommendationsSw: parsed.actionableRecommendationsSw || fallback.actionableRecommendationsSw,
+      };
+    } catch (err) {
+      this.logger.warn(`Gemini AI sales analysis fallback used: ${err.message}`);
+      return fallback;
+    }
+  }
 }

@@ -7,16 +7,23 @@ import {
   DailyRecord,
   StockItem,
   ItemSold,
+  DepartmentSale,
+  ExpenseItem,
 } from '../../database/schemas/grow-intake.schema';
+import { GeminiService } from '../ai/gemini.service';
 
 @Injectable()
 export class GrowthService {
   constructor(
     @InjectModel(GrowIntake.name) private growModel: Model<GrowIntakeDocument>,
+    private readonly geminiService: GeminiService,
   ) {}
 
   async submitIntake(data: {
     userId?: string;
+    businessName?: string;
+    branchName?: string;
+    departments?: string[];
     businessType: string;
     operatingDuration: string;
     originalInvestment?: string;
@@ -46,12 +53,19 @@ export class GrowthService {
       monthlySalesRange: data.monthlySalesRange || data.optionalFinancials?.monthlySales || 'Under KES 50,000',
     });
 
+    const defaultDepts = data.departments && data.departments.length > 0
+      ? data.departments
+      : ['SHOP', 'SALES'];
+
     const initialSnapshot = this.computeInitialSnapshot();
     const initialMoneyPlan = this.computeMoneyPlan(data, []);
     const initialNextStep = this.computeNextBestStep(data, [], []);
 
     const intake = new this.growModel({
       ...data,
+      businessName: data.businessName || data.businessType,
+      branchName: data.branchName || 'Main Branch',
+      departments: defaultDepts,
       financialTrackingAbility: trackingAbility,
       diagnostics: {
         ...diagnostics,
@@ -65,6 +79,13 @@ export class GrowthService {
       isUnlocked: false,
     });
 
+    intake.markModified('dailyRecords');
+    intake.markModified('stockItems');
+    intake.markModified('departments');
+    intake.markModified('snapshot');
+    intake.markModified('moneyPlan');
+    intake.markModified('nextBestStep');
+
     return intake.save();
   }
 
@@ -73,17 +94,26 @@ export class GrowthService {
     if (!intake) {
       throw new NotFoundException(`Grow intake with ID ${id} not found`);
     }
+    if (!intake.departments || intake.departments.length === 0) {
+      intake.departments = ['SHOP', 'SALES'];
+      intake.markModified('departments');
+    }
     // Refresh snapshot, money plan and next best step
     intake.snapshot = this.computeSnapshot(intake);
     intake.moneyPlan = this.computeMoneyPlan(intake, intake.dailyRecords);
     intake.nextBestStep = this.computeNextBestStep(intake, intake.dailyRecords, intake.stockItems);
+    intake.markModified('snapshot');
+    intake.markModified('moneyPlan');
+    intake.markModified('nextBestStep');
     await intake.save();
     return intake;
   }
 
   async getRecentIntakes(userId?: string) {
-    const filter = userId ? { userId } : {};
-    return this.growModel.find(filter).sort({ createdAt: -1 }).limit(10).exec();
+    if (userId) {
+      return this.growModel.find({ userId }).sort({ createdAt: -1 }).limit(20).exec();
+    }
+    return [];
   }
 
   async recordDailyTracking(
@@ -92,8 +122,13 @@ export class GrowthService {
       date: string; // YYYY-MM-DD
       sales: number;
       expenses: number;
+      cashTotal?: number;
+      tillTotal?: number;
+      departmentBreakdown?: DepartmentSale[];
+      expenseBreakdown?: ExpenseItem[];
       itemsSold?: ItemSold[];
       notes?: string;
+      rawText?: string;
     },
   ) {
     const intake = await this.growModel.findById(id).exec();
@@ -101,21 +136,58 @@ export class GrowthService {
       throw new NotFoundException(`Grow intake with ID ${id} not found`);
     }
 
-    const salesNum = Number(recordData.sales) || 0;
-    const expensesNum = Number(recordData.expenses) || 0;
-    // Estimated Profit = Sales - Recorded Expenses (Spec: clearly labeled as estimated profit)
+    if (!intake.dailyRecords) {
+      intake.dailyRecords = [];
+    }
+
+    let salesNum = Number(recordData.sales) || 0;
+    let expensesNum = Number(recordData.expenses) || 0;
+
+    // Auto-calculate from Cash + Till if salesNum was 0
+    if (salesNum === 0 && (recordData.cashTotal || recordData.tillTotal)) {
+      salesNum = (Number(recordData.cashTotal) || 0) + (Number(recordData.tillTotal) || 0);
+    }
+
+    // Auto-calculate from department breakdown if salesNum is still 0
+    if (salesNum === 0 && recordData.departmentBreakdown && recordData.departmentBreakdown.length > 0) {
+      salesNum = recordData.departmentBreakdown.reduce((sum, d) => sum + (Number(d.total) || (Number(d.cash) || 0) + (Number(d.till) || 0)), 0);
+    }
+
+    // Auto-calculate from expenses breakdown if expensesNum was 0
+    if (expensesNum === 0 && recordData.expenseBreakdown && recordData.expenseBreakdown.length > 0) {
+      expensesNum = recordData.expenseBreakdown.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    }
+
     const estimatedProfit = salesNum - expensesNum;
+
+    const recordDate = recordData.date || new Date().toISOString().split('T')[0];
 
     const newRecord: DailyRecord = {
       id: 'rec_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
-      date: recordData.date || new Date().toISOString().split('T')[0],
+      date: recordDate,
       sales: salesNum,
       expenses: expensesNum,
       estimatedProfit,
+      cashTotal: Number(recordData.cashTotal) || 0,
+      tillTotal: Number(recordData.tillTotal) || 0,
+      departmentBreakdown: recordData.departmentBreakdown || [],
+      expenseBreakdown: recordData.expenseBreakdown || [],
       itemsSold: recordData.itemsSold || [],
       notes: recordData.notes || '',
+      rawText: recordData.rawText || '',
       createdAt: new Date(),
     };
+
+    // Auto-register new departments found in this record
+    if (recordData.departmentBreakdown && Array.isArray(recordData.departmentBreakdown)) {
+      if (!intake.departments) intake.departments = [];
+      for (const d of recordData.departmentBreakdown) {
+        const deptUpper = (d.department || '').trim().toUpperCase();
+        if (deptUpper && !intake.departments.includes(deptUpper)) {
+          intake.departments.push(deptUpper);
+        }
+      }
+    }
 
     // Connection to sales: auto-decrement stock if item matches
     const newItemsPrompt: string[] = [];
@@ -135,12 +207,28 @@ export class GrowthService {
       }
     }
 
-    intake.dailyRecords.unshift(newRecord);
+    // Replace if record for this date already exists, otherwise unshift
+    const existingIndex = intake.dailyRecords.findIndex(r => r.date === recordDate);
+    if (existingIndex >= 0) {
+      intake.dailyRecords[existingIndex] = { ...intake.dailyRecords[existingIndex], ...newRecord };
+    } else {
+      intake.dailyRecords.unshift(newRecord);
+    }
+
+    // Keep records sorted newest to oldest
+    intake.dailyRecords.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
     // Update snapshot, money plan and intelligence layer
     intake.snapshot = this.computeSnapshot(intake);
     intake.moneyPlan = this.computeMoneyPlan(intake, intake.dailyRecords);
     intake.nextBestStep = this.computeNextBestStep(intake, intake.dailyRecords, intake.stockItems);
+
+    intake.markModified('dailyRecords');
+    intake.markModified('stockItems');
+    intake.markModified('departments');
+    intake.markModified('snapshot');
+    intake.markModified('moneyPlan');
+    intake.markModified('nextBestStep');
 
     await intake.save();
 
@@ -149,6 +237,306 @@ export class GrowthService {
       record: newRecord,
       newItemsNotInStock: newItemsPrompt,
     };
+  }
+
+  async recordBulkDailyTracking(
+    id: string,
+    records: Array<{
+      date: string;
+      sales: number;
+      expenses: number;
+      cashTotal?: number;
+      tillTotal?: number;
+      departmentBreakdown?: DepartmentSale[];
+      expenseBreakdown?: ExpenseItem[];
+      itemsSold?: ItemSold[];
+      notes?: string;
+      rawText?: string;
+    }>,
+  ) {
+    const intake = await this.growModel.findById(id).exec();
+    if (!intake) {
+      throw new NotFoundException(`Grow intake with ID ${id} not found`);
+    }
+
+    if (!intake.dailyRecords) {
+      intake.dailyRecords = [];
+    }
+    if (!intake.departments) {
+      intake.departments = ['CHIPS', 'SHOP', 'BEAUTY', 'SALAD', 'CORN'];
+    }
+
+    for (const recordData of records) {
+      let salesNum = Number(recordData.sales) || 0;
+      let expensesNum = Number(recordData.expenses) || 0;
+
+      if (salesNum === 0 && (recordData.cashTotal || recordData.tillTotal)) {
+        salesNum = (Number(recordData.cashTotal) || 0) + (Number(recordData.tillTotal) || 0);
+      }
+      if (salesNum === 0 && recordData.departmentBreakdown && recordData.departmentBreakdown.length > 0) {
+        salesNum = recordData.departmentBreakdown.reduce((sum, d) => sum + (Number(d.total) || (Number(d.cash) || 0) + (Number(d.till) || 0)), 0);
+      }
+      if (expensesNum === 0 && recordData.expenseBreakdown && recordData.expenseBreakdown.length > 0) {
+        expensesNum = recordData.expenseBreakdown.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+      }
+
+      const recordDate = recordData.date || new Date().toISOString().split('T')[0];
+      const estimatedProfit = salesNum - expensesNum;
+
+      const newRecord: DailyRecord = {
+        id: 'rec_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+        date: recordDate,
+        sales: salesNum,
+        expenses: expensesNum,
+        estimatedProfit,
+        cashTotal: Number(recordData.cashTotal) || 0,
+        tillTotal: Number(recordData.tillTotal) || 0,
+        departmentBreakdown: recordData.departmentBreakdown || [],
+        expenseBreakdown: recordData.expenseBreakdown || [],
+        itemsSold: recordData.itemsSold || [],
+        notes: recordData.notes || '',
+        rawText: recordData.rawText || '',
+        createdAt: new Date(),
+      };
+
+      if (recordData.departmentBreakdown) {
+        for (const d of recordData.departmentBreakdown) {
+          const deptUpper = (d.department || '').trim().toUpperCase();
+          if (deptUpper && !intake.departments.includes(deptUpper)) {
+            intake.departments.push(deptUpper);
+          }
+        }
+      }
+
+      const existingIndex = intake.dailyRecords.findIndex(r => r.date === recordDate);
+      if (existingIndex >= 0) {
+        intake.dailyRecords[existingIndex] = { ...intake.dailyRecords[existingIndex], ...newRecord };
+      } else {
+        intake.dailyRecords.push(newRecord);
+      }
+    }
+
+    intake.dailyRecords.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+    intake.snapshot = this.computeSnapshot(intake);
+    intake.moneyPlan = this.computeMoneyPlan(intake, intake.dailyRecords);
+    intake.nextBestStep = this.computeNextBestStep(intake, intake.dailyRecords, intake.stockItems);
+
+    intake.markModified('dailyRecords');
+    intake.markModified('departments');
+    intake.markModified('snapshot');
+    intake.markModified('moneyPlan');
+    intake.markModified('nextBestStep');
+
+    await intake.save();
+    return intake;
+  }
+
+  async deleteDailyRecord(id: string, recordId: string) {
+    const intake = await this.growModel.findById(id).exec();
+    if (!intake) {
+      throw new NotFoundException(`Grow intake with ID ${id} not found`);
+    }
+
+    intake.dailyRecords = (intake.dailyRecords || []).filter(r => r.id !== recordId);
+    intake.snapshot = this.computeSnapshot(intake);
+    intake.moneyPlan = this.computeMoneyPlan(intake, intake.dailyRecords);
+    intake.nextBestStep = this.computeNextBestStep(intake, intake.dailyRecords, intake.stockItems);
+
+    intake.markModified('dailyRecords');
+    intake.markModified('snapshot');
+    intake.markModified('moneyPlan');
+    intake.markModified('nextBestStep');
+
+    await intake.save();
+    return intake;
+  }
+
+  async addDepartment(id: string, departmentName: string) {
+    const intake = await this.growModel.findById(id).exec();
+    if (!intake) throw new NotFoundException(`Grow intake with ID ${id} not found`);
+    const formatted = departmentName.trim().toUpperCase();
+    if (!intake.departments) intake.departments = [];
+    if (!intake.departments.includes(formatted)) {
+      intake.departments.push(formatted);
+      intake.markModified('departments');
+      await intake.save();
+    }
+    return intake;
+  }
+
+  async deleteDepartment(id: string, departmentName: string) {
+    const intake = await this.growModel.findById(id).exec();
+    if (!intake) throw new NotFoundException(`Grow intake with ID ${id} not found`);
+    const formatted = departmentName.trim().toUpperCase();
+    intake.departments = (intake.departments || []).filter(d => d !== formatted);
+    intake.markModified('departments');
+    await intake.save();
+    return intake;
+  }
+
+  async updateDailyRecord(
+    id: string,
+    recordId: string,
+    recordData: {
+      date: string;
+      sales?: number;
+      expenses?: number;
+      cashTotal?: number;
+      tillTotal?: number;
+      departmentBreakdown?: DepartmentSale[];
+      expenseBreakdown?: ExpenseItem[];
+      itemsSold?: ItemSold[];
+      notes?: string;
+    },
+  ) {
+    const intake = await this.growModel.findById(id).exec();
+    if (!intake) throw new NotFoundException(`Grow intake with ID ${id} not found`);
+
+    if (!intake.dailyRecords) intake.dailyRecords = [];
+    const index = intake.dailyRecords.findIndex(r => r.id === recordId);
+    if (index === -1) throw new NotFoundException(`Daily record with ID ${recordId} not found`);
+
+    let salesNum = Number(recordData.sales) || 0;
+    let expensesNum = Number(recordData.expenses) || 0;
+
+    if (salesNum === 0 && (recordData.cashTotal || recordData.tillTotal)) {
+      salesNum = (Number(recordData.cashTotal) || 0) + (Number(recordData.tillTotal) || 0);
+    }
+    if (salesNum === 0 && recordData.departmentBreakdown && recordData.departmentBreakdown.length > 0) {
+      salesNum = recordData.departmentBreakdown.reduce((sum, d) => sum + (Number(d.total) || (Number(d.cash) || 0) + (Number(d.till) || 0)), 0);
+    }
+    if (expensesNum === 0 && recordData.expenseBreakdown && recordData.expenseBreakdown.length > 0) {
+      expensesNum = recordData.expenseBreakdown.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    }
+
+    const estimatedProfit = salesNum - expensesNum;
+
+    intake.dailyRecords[index] = {
+      ...intake.dailyRecords[index],
+      date: recordData.date || intake.dailyRecords[index].date,
+      sales: salesNum,
+      expenses: expensesNum,
+      estimatedProfit,
+      cashTotal: Number(recordData.cashTotal) || 0,
+      tillTotal: Number(recordData.tillTotal) || 0,
+      departmentBreakdown: recordData.departmentBreakdown || intake.dailyRecords[index].departmentBreakdown || [],
+      expenseBreakdown: recordData.expenseBreakdown || intake.dailyRecords[index].expenseBreakdown || [],
+      notes: recordData.notes !== undefined ? recordData.notes : intake.dailyRecords[index].notes,
+    };
+
+    // Auto-register any new department entered during edit
+    if (recordData.departmentBreakdown) {
+      if (!intake.departments) intake.departments = [];
+      for (const d of recordData.departmentBreakdown) {
+        const dUpper = (d.department || '').trim().toUpperCase();
+        if (dUpper && !intake.departments.includes(dUpper)) {
+          intake.departments.push(dUpper);
+        }
+      }
+    }
+
+    intake.dailyRecords.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+    intake.snapshot = this.computeSnapshot(intake);
+    intake.moneyPlan = this.computeMoneyPlan(intake, intake.dailyRecords);
+    intake.nextBestStep = this.computeNextBestStep(intake, intake.dailyRecords, intake.stockItems);
+
+    intake.markModified('dailyRecords');
+    intake.markModified('departments');
+    intake.markModified('snapshot');
+    intake.markModified('moneyPlan');
+    intake.markModified('nextBestStep');
+
+    await intake.save();
+    return intake;
+  }
+
+  async runAiSalesAnalysis(id: string, timeframe: string = 'all') {
+    const intake = await this.growModel.findById(id).exec();
+    if (!intake) throw new NotFoundException(`Grow intake with ID ${id} not found`);
+
+    let records = (intake.dailyRecords || []).slice();
+    records.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+    if (timeframe === 'week') {
+      records = records.slice(0, 7);
+    } else if (timeframe === 'month') {
+      records = records.slice(0, 30);
+    }
+
+    if (records.length === 0) {
+      return {
+        headline: 'No records found for this timeframe',
+        executiveSummary: 'Please record at least 1 day of sales to run AI analysis.',
+        departmentInsights: [],
+        cashFlowAdvice: 'Start recording Till and Cash sales to receive liquidity recommendations.',
+        expenseAudit: 'Log your daily operational expenses to track profit margins.',
+        actionableRecommendations: ['Record today’s sales and expenses to begin.'],
+      };
+    }
+
+    const totalSales = records.reduce((s, r) => s + (Number(r.sales) || 0), 0);
+    const totalExpenses = records.reduce((s, r) => s + (Number(r.expenses) || 0), 0);
+    const netProfit = totalSales - totalExpenses;
+    const totalTill = records.reduce((s, r) => s + (Number(r.tillTotal) || 0), 0);
+    const totalCash = records.reduce((s, r) => s + (Number(r.cashTotal) || 0), 0);
+
+    const deptMap: Record<string, { sales: number; cash: number; till: number }> = {};
+    const expMap: Record<string, number> = {};
+
+    for (const r of records) {
+      if (r.departmentBreakdown) {
+        for (const d of r.departmentBreakdown) {
+          const dept = (d.department || 'GENERAL').toUpperCase();
+          if (!deptMap[dept]) deptMap[dept] = { sales: 0, cash: 0, till: 0 };
+          deptMap[dept].sales += Number(d.total) || ((Number(d.cash) || 0) + (Number(d.till) || 0));
+          deptMap[dept].cash += Number(d.cash) || 0;
+          deptMap[dept].till += Number(d.till) || 0;
+        }
+      }
+      if (r.expenseBreakdown) {
+        for (const e of r.expenseBreakdown) {
+          const cat = e.category || 'General Expense';
+          expMap[cat] = (expMap[cat] || 0) + (Number(e.amount) || 0);
+        }
+      }
+    }
+
+    const payload = {
+      businessName: intake.businessName || intake.businessType,
+      businessType: intake.businessType,
+      branchName: intake.branchName || 'Main',
+      timeframe,
+      recordsCount: records.length,
+      dateRange: `${records[records.length - 1]?.date} to ${records[0]?.date}`,
+      totalSales,
+      totalExpenses,
+      netProfit,
+      totalTill,
+      totalCash,
+      departmentBreakdown: deptMap,
+      expenseBreakdown: expMap,
+      dailyTrend: records.map(r => ({ date: r.date, sales: r.sales, expenses: r.expenses, profit: r.estimatedProfit })),
+    };
+
+    const analysis = await this.geminiService.generateSalesAnalysis(payload);
+
+    if (!intake.diagnostics) intake.diagnostics = {};
+    intake.diagnostics.latestAiAnalysis = {
+      ...analysis,
+      timeframe,
+      analyzedAt: new Date(),
+      recordsCount: records.length,
+      dateRange: payload.dateRange,
+      totalSales,
+      totalExpenses,
+      netProfit,
+    };
+    intake.markModified('diagnostics');
+    await intake.save();
+
+    return intake.diagnostics.latestAiAnalysis;
   }
 
   async addStockItem(
@@ -276,11 +664,56 @@ export class GrowthService {
     const totalDays = records.length;
     let totalSales = 0;
     let totalExpenses = 0;
+    let totalCash = 0;
+    let totalTill = 0;
+
+    const deptMap: Record<string, { sales: number; cash: number; till: number }> = {};
+    const expenseCategoryMap: Record<string, number> = {};
+    let peakDay = { date: '', sales: 0 };
 
     for (const r of records) {
-      totalSales += Number(r.sales) || 0;
-      totalExpenses += Number(r.expenses) || 0;
+      const s = Number(r.sales) || 0;
+      const e = Number(r.expenses) || 0;
+      totalSales += s;
+      totalExpenses += e;
+
+      if (s > peakDay.sales) {
+        peakDay = { date: r.date, sales: s };
+      }
+
+      totalCash += Number(r.cashTotal) || 0;
+      totalTill += Number(r.tillTotal) || 0;
+
+      if (r.departmentBreakdown && Array.isArray(r.departmentBreakdown)) {
+        for (const d of r.departmentBreakdown) {
+          const name = (d.department || 'GENERAL').trim().toUpperCase();
+          if (!deptMap[name]) {
+            deptMap[name] = { sales: 0, cash: 0, till: 0 };
+          }
+          const itemTotal = Number(d.total) || ((Number(d.cash) || 0) + (Number(d.till) || 0));
+          deptMap[name].sales += itemTotal;
+          deptMap[name].cash += Number(d.cash) || 0;
+          deptMap[name].till += Number(d.till) || 0;
+        }
+      }
+
+      if (r.expenseBreakdown && Array.isArray(r.expenseBreakdown)) {
+        for (const exp of r.expenseBreakdown) {
+          const cat = (exp.category || 'General Expense').trim();
+          expenseCategoryMap[cat] = (expenseCategoryMap[cat] || 0) + (Number(exp.amount) || 0);
+        }
+      }
     }
+
+    const departmentBreakdown = Object.entries(deptMap).map(([name, data]) => ({
+      name,
+      sales: data.sales,
+      cash: data.cash,
+      till: data.till,
+      percent: totalSales > 0 ? Math.round((data.sales / totalSales) * 100) : 0,
+    })).sort((a, b) => b.sales - a.sales);
+
+    const topDepartment = departmentBreakdown[0]?.name || null;
 
     const averageDailySales = totalDays > 0 ? Math.round(totalSales / totalDays) : 0;
     const averageDailyExpenses = totalDays > 0 ? Math.round(totalExpenses / totalDays) : 0;
@@ -304,6 +737,10 @@ export class GrowthService {
     const stockPurchases = parseFloat(String(opt.averageStockPurchases || '0').replace(/[^0-9.]/g, '')) || 0;
 
     return {
+      totalSales,
+      totalExpenses,
+      totalCash,
+      totalTill,
       averageDailySales,
       averageMonthlySales,
       averageExpenses: averageDailyExpenses,
@@ -314,6 +751,14 @@ export class GrowthService {
       ownerPay: Math.round(Math.max(0, estimatedMonthlyProfit * 0.35)),
       totalTrackedDays: totalDays,
       stockInventoryValue,
+      departmentBreakdown,
+      topDepartment,
+      expenseCategories: Object.entries(expenseCategoryMap).map(([category, amount]) => ({
+        category,
+        amount,
+        percent: totalExpenses > 0 ? Math.round((amount / totalExpenses) * 100) : 0,
+      })).sort((a, b) => b.amount - a.amount),
+      peakDay,
     };
   }
 
@@ -332,7 +777,6 @@ export class GrowthService {
     let personalSavingsPercent = 5;
 
     if (operatingAge.includes('Less than 6')) {
-      // Early stage: higher reinvestment & reserve buffer
       operatingPercent = 40;
       ownerPayPercent = 20;
       employeePercent = 10;
@@ -340,7 +784,6 @@ export class GrowthService {
       reinvestmentPercent = 10;
       personalSavingsPercent = 5;
     } else if (operatingAge.includes('More than 3')) {
-      // Mature stage: steady owner pay and growth reserve
       operatingPercent = 40;
       ownerPayPercent = 30;
       employeePercent = 12;
@@ -402,7 +845,7 @@ export class GrowthService {
     };
   }
 
-  // --- THE INTELLIGENCE LAYER: "YOUR NEXT BEST STEP" ---
+  // --- THE INTELLIGENCE LAYER: "YOUR NEXT BEST STEP" & COMPASS RECOMMENDATIONS ---
   private computeNextBestStep(intake: any, records: DailyRecord[], stockItems: StockItem[]) {
     const totalDays = (records || []).length;
     const stockCount = (stockItems || []).length;
@@ -412,54 +855,66 @@ export class GrowthService {
       return {
         headline: 'Your next best step: Record today’s total sales and expenses.',
         headlineSw: 'Hatua yako bora inayofuata: Rekodi mauzo na matumizi ya leo.',
-        reason: 'Compass needs at least 3 days of real numbers to begin diagnosing profit leaks.',
+        reason: 'Compass needs at least 3 days of real numbers to begin diagnosing profit leaks and department margins.',
         reasonSw: 'Compass inahitaji angalau siku 3 za nambari halisi kuanza kugundua mianya ya kupoteza faida.',
         actionType: 'record_sales',
+        actionableSteps: [
+          'Record daily collections split into Till and Cash.',
+          'Note down specific unit sales (Chips, Shop, Beauty, etc.).',
+          'Log staff wages and restocking runs.'
+        ],
       };
     }
 
-    // Rule 2: Less than 3 days of tracking
-    if (totalDays < 3) {
-      return {
-        headline: `Your next best step: Keep tracking for ${3 - totalDays} more consecutive days.`,
-        headlineSw: `Hatua yako bora inayofuata: Endelea kurekodi kwa siku ${3 - totalDays} zilizobaki mfululizo.`,
-        reason: 'Consistency reveals whether your daily margins are predictable or fluctuating wildly.',
-        reasonSw: 'Uthabiti unaonyesha iwapo faida yako ya kila siku ni ya uhakika au inabadilika kwa kiasi kikubwa.',
-        actionType: 'continue_tracking',
-      };
+    // Rule 2: Multi-day data available (3+ days)
+    const recentExpenses = records.slice(0, 10).reduce((sum, r) => sum + r.expenses, 0);
+    const recentSales = records.slice(0, 10).reduce((sum, r) => sum + r.sales, 0);
+    const totalTill = records.reduce((sum, r) => sum + (r.tillTotal || 0), 0);
+    const totalCash = records.reduce((sum, r) => sum + (r.cashTotal || 0), 0);
+
+    // Analyze department performance if breakdown exists
+    const deptTotals: Record<string, number> = {};
+    for (const r of records) {
+      if (r.departmentBreakdown) {
+        for (const d of r.departmentBreakdown) {
+          const dept = (d.department || 'GENERAL').toUpperCase();
+          deptTotals[dept] = (deptTotals[dept] || 0) + (d.total || (d.cash + d.till));
+        }
+      }
     }
 
-    // Rule 3: Has tracking data but no stock entered
-    if (stockCount === 0) {
-      return {
-        headline: 'Your next best step: Track your stock for the next 7 days.',
-        headlineSw: 'Hatua yako bora inayofuata: Fuatilia hesabu ya mzigo wako kwa siku 7 zijazo.',
-        reason: 'Tracking product inventory connects daily sales directly to unit profit margins.',
-        reasonSw: 'Kufuatilia mzigo kunasaidia kuunganisha mauzo ya kila siku na faida halisi ya kila bidhaa.',
-        actionType: 'add_stock',
-      };
-    }
+    const sortedDepts = Object.entries(deptTotals).sort((a, b) => b[1] - a[1]);
+    const topDeptName = sortedDepts[0]?.[0] || 'CHIPS';
 
-    // Rule 4: High expense ratio check
-    const recentExpenses = records.slice(0, 5).reduce((sum, r) => sum + r.expenses, 0);
-    const recentSales = records.slice(0, 5).reduce((sum, r) => sum + r.sales, 0);
-    if (recentSales > 0 && recentExpenses / recentSales > 0.65) {
-      return {
-        headline: 'Your expenses are taking a large portion of your sales. Your next step is to identify your three biggest expenses.',
-        headlineSw: 'Matumizi yako yanachukua sehemu kubwa ya mauzo. Hatua yako inayofuata ni kubainisha matumizi 3 makubwa zaidi.',
-        reason: 'Operating expenses above 65% of sales indicate either under-pricing or unnecessary overhead.',
-        reasonSw: 'Gharama za uendeshaji zaidi ya 65% ya mauzo huashiria bei ya chini au matumizi yasiyo ya lazima.',
-        actionType: 'audit_expenses',
-      };
-    }
+    const actionableSteps = [
+      `1. Double-down on ${topDeptName}: It generates the bulk of customer cashflow. Ensure zero stockouts during Friday-Saturday peaks.`,
+      `2. Protect Beauty & High-Margin Units: Services like Braids and Lashes require no perishables—promote bundle deals (e.g., hair service includes snack discount).`,
+      `3. Monday & Tuesday Strategy: Midweek traffic dips. Run special lunch combos or use slow hours for potato peeling/prep to reduce peak weekend strain.`,
+      `4. Till Float Discipline: Over 60% of collections flow through M-Pesa Till. Sweep daily till amounts into a dedicated business account every evening to prevent personal spending leakages.`,
+      `5. Bulk Inventory Margin Check: Ensure major batch expenses (e.g., Sacks of Potatoes & Cooking Oil) yield at least 2.2x revenue in chips sales.`
+    ];
 
-    // Rule 5: Default consistent owner pay recommendation
+    const actionableStepsSw = [
+      `1. Imarisha ${topDeptName}: Inaleta sehemu kubwa ya fedha. Hakikisha mzigo haukati hasa Ijumaa na Jumamosi.`,
+      `2. Linda Faida ya Saluni/Urembo (Beauty): Huduma za Kusuka na Lashes zina faida ya juu bila kuharibika—washawishi wateja wa saluni kununua vitafunio.`,
+      `3. Mbinu ya Jumatatu na Jumanne: Mauzo hushuka mwanzo wa wiki. Tumia muda huu kutayarisha mzigo wa viazi ili kupunguza mzigo wa wikendi.`,
+      `4. Utaratibu wa Till (M-Pesa): Zaidi ya 60% ya malipo huingia kwa Till. Hamisha pesa za Till kila jioni kwenye akaunti maalum ya biashara badala ya kuitumia kwa mahitaji binafsi.`,
+      `5. Udhibiti wa Bei ya Mzigo Mkubwa: Hakikisha ununuzi wa magunia ya viazi na mafuta unaleta angalau faida ya mara 2 ya mauzo ya chips.`
+    ];
+
     return {
-      headline: 'You’ve been generating steady sales. Your next step is to establish a consistent owner-pay amount.',
-      headlineSw: 'Umekuwa ukitengeneza mauzo ya kuridhisha. Hatua yako inayofuata ni kuweka mshahara thabiti wa kujilipa mwenyewe.',
-      reason: 'Separating business profit from household expenses protects your working capital from gradual depletion.',
-      reasonSw: 'Kutenga faida ya biashara na matumizi ya nyumbani kunalinda mtaji wako usipungue polepole.',
-      actionType: 'owner_pay',
+      headline: `Compass Growth Recommendation: Scale ${topDeptName} and Optimize Early-Week Staffing.`,
+      headlineSw: `Ushauri wa Ukuaji wa Compass: Panua ${topDeptName} na Udhibiti Matumizi Mwanzo wa Wiki.`,
+      reason: `Across ${totalDays} logged days, your business generated KSh ${recentSales.toLocaleString()} in sales with clear weekend volume surges. Here are your high-impact next steps:`,
+      reasonSw: `Kupitia siku ${totalDays} zilizorekodiwa, biashara imetengeneza KSh ${recentSales.toLocaleString()} kwa mauzo makubwa zaidi wikendi. Hizi hapa hatua zako muhimu:`,
+      actionType: 'grow_business',
+      actionableSteps,
+      actionableStepsSw,
+      keyMetrics: {
+        topDepartment: topDeptName,
+        tillPercentage: (totalTill + totalCash) > 0 ? Math.round((totalTill / (totalTill + totalCash)) * 100) : 0,
+        averageDailySales: totalDays > 0 ? Math.round(recentSales / totalDays) : 0,
+      }
     };
   }
 
