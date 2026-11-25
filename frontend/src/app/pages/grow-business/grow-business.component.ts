@@ -2,6 +2,7 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import * as XLSX from 'xlsx';
 import { ApiService } from '../../core/services/api.service';
 import { LanguageService } from '../../core/services/language.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -394,17 +395,41 @@ interface ExpenseDraft {
                   />
                 </div>
 
+                <!-- Export to Excel Trigger -->
+                <button
+                  type="button"
+                  (click)="exportToExcel()"
+                  class="px-3 py-1.5 rounded-button bg-forest text-gold hover:bg-forest-deep text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all"
+                  title="Export to Excel (.xlsx)"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span>{{ lang.isSwahili() ? 'Pakua Excel' : 'Export Excel' }}</span>
+                </button>
+
+                <!-- Import from Excel Trigger -->
+                <button
+                  type="button"
+                  (click)="openExcelImporter()"
+                  class="px-3 py-1.5 rounded-button bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all"
+                  title="Import from Excel / CSV"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  <span>{{ lang.isSwahili() ? 'Ingiza Excel' : 'Import Excel' }}</span>
+                </button>
+
                 <!-- WhatsApp Quick Import Trigger -->
                 <button
                   type="button"
                   (click)="showWhatsAppImporter = true"
-                  class="px-3 py-1.5 rounded-button bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all"
+                  class="px-3 py-1.5 rounded-button bg-charcoal/10 hover:bg-charcoal/20 text-charcoal text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all"
                   title="Import WhatsApp Sales"
                 >
-                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-                  </svg>
-                  <span>{{ lang.isSwahili() ? 'Bandika WhatsApp' : 'Paste WhatsApp' }}</span>
+                  <span>💬</span>
+                  <span>{{ lang.isSwahili() ? 'WhatsApp' : 'WhatsApp' }}</span>
                 </button>
               </div>
             </div>
@@ -856,16 +881,40 @@ interface ExpenseDraft {
 
           <!-- RECENT DAILY RECORDS TABLE WITH EDIT BUTTON -->
           <div class="bg-white rounded-sheet border border-forest-line/15 p-6 shadow-light-md space-y-4">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h4 class="text-sm font-serif font-bold text-charcoal uppercase tracking-wider">
                   {{ lang.isSwahili() ? 'Historia ya Mauzo Yaliyohifadhiwa' : 'Recorded Daily History' }}
                 </h4>
                 <p class="text-[11px] text-charcoal/60">{{ lang.isSwahili() ? 'Unaweza kubonyeza kitufe cha kalamu (edit) kurekebisha siku yoyote.' : 'Click the edit icon on any day to update numbers or departments.' }}</p>
               </div>
-              <span class="text-xs font-bold text-forest bg-forest/10 px-2.5 py-1 rounded-pill">
-                {{ (activeProfile.dailyRecords?.length || 0) }} {{ lang.isSwahili() ? 'siku zilizorekodiwa' : 'days logged' }}
-              </span>
+              <div class="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  (click)="exportToExcel()"
+                  class="px-3 py-1.5 bg-forest hover:bg-forest-deep text-gold text-xs font-bold rounded-button flex items-center gap-1.5 shadow-sm transition-all"
+                  title="Export to Excel (.xlsx)"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span>{{ lang.isSwahili() ? 'Pakua Excel' : 'Export Excel' }}</span>
+                </button>
+                <button
+                  type="button"
+                  (click)="openExcelImporter()"
+                  class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-button flex items-center gap-1.5 shadow-sm transition-all"
+                  title="Import from Excel / CSV"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  <span>{{ lang.isSwahili() ? 'Ingiza Excel' : 'Import Excel' }}</span>
+                </button>
+                <span class="text-xs font-bold text-forest bg-forest/10 px-2.5 py-1 rounded-pill">
+                  {{ (activeProfile.dailyRecords?.length || 0) }} {{ lang.isSwahili() ? 'siku zilizorekodiwa' : 'days logged' }}
+                </span>
+              </div>
             </div>
 
             <div *ngIf="(!activeProfile.dailyRecords || activeProfile.dailyRecords.length === 0)" class="text-center py-8 text-xs text-charcoal/50 bg-ivory rounded-card">
@@ -1480,6 +1529,150 @@ interface ExpenseDraft {
         </div>
       </div>
 
+      <!-- ================= MODAL: EXCEL & CSV SALES IMPORTER ================= -->
+      <div *ngIf="showExcelImporter" class="fixed inset-0 bg-charcoal/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
+        <div class="bg-white rounded-sheet max-w-3xl w-full p-6 sm:p-8 space-y-5 border border-forest-line/20 shadow-2xl max-h-[90vh] flex flex-col">
+          
+          <div class="flex items-center justify-between border-b border-forest-line/15 pb-3">
+            <div>
+              <h3 class="text-lg font-serif font-bold text-charcoal flex items-center gap-2">
+                <span>📥</span>
+                <span>{{ lang.isSwahili() ? 'Ingiza Mauzo kutoka Faili ya Excel / CSV' : 'Import Sales from Excel / CSV Spreadsheet' }}</span>
+              </h3>
+              <p class="text-xs text-charcoal/60">
+                {{ lang.isSwahili() 
+                  ? 'Pakia faili yako ya Excel (.xlsx, .xls, .csv). Compass itasoma safu za siku, idara, matumizi, na kusasisha rekodi zako moja kwa moja.' 
+                  : 'Upload your completed spreadsheet (.xlsx, .xls, or .csv). Compass will auto-detect your departments, calculate totals, and update your records permanently.' 
+                }}
+              </p>
+            </div>
+            <button (click)="closeExcelImporter()" class="text-charcoal/50 hover:text-charcoal font-bold text-lg">✕</button>
+          </div>
+
+          <div class="overflow-y-auto flex-1 space-y-4 pr-1">
+
+            <!-- File Upload Dropzone -->
+            <div class="p-6 border-2 border-dashed border-forest-line/30 hover:border-gold rounded-card bg-ivory/50 text-center space-y-2 cursor-pointer transition-colors relative">
+              <input 
+                type="file" 
+                accept=".xlsx,.xls,.csv" 
+                (change)="onExcelFileSelected($event)"
+                class="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                title="Select Excel or CSV file"
+              />
+              <div class="w-12 h-12 mx-auto rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl font-bold">
+                📊
+              </div>
+              <div class="text-xs text-charcoal/80">
+                <span class="font-bold text-forest underline cursor-pointer">{{ lang.isSwahili() ? 'Bofya hapa kuchagua faili ya Excel / CSV' : 'Click to select or drag & drop Excel / CSV file' }}</span>
+                <p class="text-[11px] text-charcoal/50 mt-0.5">Supports Microsoft Excel (.xlsx, .xls) and CSV (.csv)</p>
+              </div>
+              <div *ngIf="excelFileName" class="inline-block px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-pill">
+                📄 {{ excelFileName }}
+              </div>
+            </div>
+
+            <!-- Download Template Link -->
+            <div class="flex items-center justify-between text-xs bg-forest/5 p-3 rounded-card border border-forest-line/15">
+              <span class="text-charcoal/70">
+                {{ lang.isSwahili() ? 'Unahitaji kiolezo cha kuanzia cha Excel?' : 'Need a starter Excel template with your current units?' }}
+              </span>
+              <button
+                type="button"
+                (click)="exportToExcel()"
+                class="font-bold text-forest hover:text-gold flex items-center gap-1 underline"
+              >
+                <span>📥</span>
+                <span>{{ lang.isSwahili() ? 'Pakua Kiolezo cha Excel' : 'Download Excel Template' }}</span>
+              </button>
+            </div>
+
+            <!-- Parsing Error Message -->
+            <div *ngIf="excelImportError" class="p-3 bg-risk/10 border border-risk/30 rounded text-xs text-risk font-semibold">
+              ⚠️ {{ excelImportError }}
+            </div>
+
+            <!-- Parsed Records Preview -->
+            <div *ngIf="parsedExcelDays.length > 0" class="space-y-3">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-bold text-forest uppercase tracking-wider">
+                  {{ lang.isSwahili() ? 'Muhtasari wa Siku Zilizopatikana:' : 'Detected Days Preview:' }} ({{ parsedExcelDays.length }} {{ lang.isSwahili() ? 'siku' : 'days' }})
+                </span>
+                <span class="text-[11px] text-charcoal/60">
+                  {{ lang.isSwahili() ? 'Tafadhali kagua data kabla ya kuhifadhi' : 'Review rows before saving to Compass' }}
+                </span>
+              </div>
+
+              <div class="overflow-x-auto border border-forest-line/20 rounded-card max-h-60 overflow-y-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                  <thead class="sticky top-0 bg-ivory border-b border-forest-line/20 text-[10px] uppercase font-bold text-charcoal/80">
+                    <tr>
+                      <th class="p-2.5">Date</th>
+                      <th class="p-2.5">Total Sales</th>
+                      <th class="p-2.5">Till / Cash</th>
+                      <th class="p-2.5">Expenses</th>
+                      <th class="p-2.5">Est. Profit</th>
+                      <th class="p-2.5">Units / Depts</th>
+                      <th class="p-2.5">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-forest-line/10 bg-white">
+                    <tr *ngFor="let day of parsedExcelDays" class="hover:bg-ivory/50">
+                      <td class="p-2.5 font-bold text-charcoal whitespace-nowrap">{{ day.date }}</td>
+                      <td class="p-2.5 font-bold text-forest">KSh {{ day.sales | number }}</td>
+                      <td class="p-2.5 whitespace-nowrap">
+                        <span *ngIf="day.tillTotal" class="text-[10px] bg-emerald-50 text-emerald-700 px-1 py-0.5 rounded font-bold mr-1">T: {{ day.tillTotal | number }}</span>
+                        <span *ngIf="day.cashTotal" class="text-[10px] bg-amber-50 text-amber-700 px-1 py-0.5 rounded font-bold">C: {{ day.cashTotal | number }}</span>
+                      </td>
+                      <td class="p-2.5 text-risk font-semibold">KSh {{ day.expenses | number }}</td>
+                      <td class="p-2.5 font-bold" [ngClass]="day.estimatedProfit >= 0 ? 'text-forest' : 'text-risk'">
+                        KSh {{ day.estimatedProfit | number }}
+                      </td>
+                      <td class="p-2.5 text-[10px] text-charcoal/70">
+                        <span *ngFor="let d of day.departmentBreakdown" class="inline-block bg-forest-line/10 px-1 py-0.5 rounded mr-1 mb-0.5">
+                          {{ d.department }}: {{ d.total | number }}
+                        </span>
+                        <span *ngIf="!day.departmentBreakdown || day.departmentBreakdown.length === 0">—</span>
+                      </td>
+                      <td class="p-2.5 whitespace-nowrap text-[10px]">
+                        <span *ngIf="isExistingRecordDate(day.date)" class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">
+                          {{ lang.isSwahili() ? 'Itasasisha' : 'Update' }}
+                        </span>
+                        <span *ngIf="!isExistingRecordDate(day.date)" class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">
+                          {{ lang.isSwahili() ? 'Mpya' : 'New' }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="flex items-center justify-between border-t border-forest-line/15 pt-3">
+            <button
+              type="button"
+              (click)="closeExcelImporter()"
+              class="px-4 py-2 text-xs font-bold text-charcoal/70 hover:bg-forest-line/10 rounded-button"
+            >
+              {{ lang.isSwahili() ? 'Ghairi' : 'Cancel' }}
+            </button>
+
+            <button
+              type="button"
+              (click)="saveParsedExcelDays()"
+              [disabled]="parsedExcelDays.length === 0 || excelImporting"
+              class="px-6 py-2.5 rounded-button bg-forest text-gold text-xs font-bold hover:bg-forest-deep shadow flex items-center gap-2 disabled:opacity-50"
+            >
+              <span *ngIf="excelImporting" class="animate-spin text-sm">↻</span>
+              <span>{{ lang.isSwahili() ? 'Thibitisha & Hifadhi Siku ' + parsedExcelDays.length + ' Mara Moja →' : 'Confirm & Save ' + parsedExcelDays.length + ' Days to Compass →' }}</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
     </div>
   `
 })
@@ -1535,6 +1728,13 @@ export class GrowBusinessComponent implements OnInit {
   showWhatsAppImporter = false;
   whatsAppRawInput = '';
   parsedDays: any[] = [];
+
+  // EXCEL & CSV EXPORT / IMPORT STATE
+  showExcelImporter = false;
+  excelImporting = false;
+  excelImportError = '';
+  parsedExcelDays: any[] = [];
+  excelFileName = '';
 
   showAddDepartmentPrompt = false;
   newDepartmentName = '';
@@ -2227,6 +2427,330 @@ export class GrowBusinessComponent implements OnInit {
     this.api.deleteStockItem(this.activeProfile._id, itemId).subscribe({
       next: res => {
         this.setActiveProfile(res);
+      }
+    });
+  }
+
+  // --- EXCEL & CSV EXPORT / IMPORT LOGIC ---
+
+  openExcelImporter() {
+    this.showExcelImporter = true;
+    this.excelImportError = '';
+    this.parsedExcelDays = [];
+    this.excelFileName = '';
+  }
+
+  closeExcelImporter() {
+    this.showExcelImporter = false;
+    this.excelImportError = '';
+    this.parsedExcelDays = [];
+    this.excelFileName = '';
+  }
+
+  isExistingRecordDate(dateStr: string): boolean {
+    if (!this.activeProfile?.dailyRecords) return false;
+    return this.activeProfile.dailyRecords.some((r: any) => r.date === dateStr);
+  }
+
+  exportToExcel() {
+    if (!this.activeProfile) return;
+
+    const depts = this.getActiveDepartments();
+    const records: any[] = (this.activeProfile.dailyRecords || []).slice();
+    records.sort((a: any, b: any) => (b.date || '').localeCompare(a.date || ''));
+
+    // 1. Data Sheet rows (Recorded History)
+    const dataRows = records.map((r: any) => {
+      const row: any = {
+        'Date': r.date || '',
+        'Total Till': Number(r.tillTotal) || 0,
+        'Total Cash': Number(r.cashTotal) || 0,
+        'Total Sales': Number(r.sales) || 0,
+        'Total Expenses': Number(r.expenses) || 0,
+        'Estimated Profit': Number(r.estimatedProfit) || 0,
+      };
+
+      for (const dept of depts) {
+        const found = (r.departmentBreakdown || []).find((d: any) => d.department?.toUpperCase() === dept.toUpperCase());
+        row[`${dept} Till`] = found ? (Number(found.till) || 0) : 0;
+        row[`${dept} Cash`] = found ? (Number(found.cash) || 0) : 0;
+        row[`${dept} Total`] = found ? (Number(found.total) || (Number(found.till) || 0) + (Number(found.cash) || 0)) : 0;
+      }
+
+      const expStr = (r.expenseBreakdown || [])
+        .map((e: any) => `${e.category || 'General'}: ${e.amount || 0}`)
+        .join('; ');
+      row['Expenses Details'] = expStr;
+      row['Notes'] = r.notes || '';
+
+      return row;
+    });
+
+    const wb = XLSX.utils.book_new();
+
+    // Sheet 1: Daily Sales History
+    const wsData = XLSX.utils.json_to_sheet(dataRows.length > 0 ? dataRows : [
+      this.getEmptyExcelRow(new Date().toISOString().slice(0, 10), depts)
+    ]);
+    XLSX.utils.book_append_sheet(wb, wsData, 'Daily Sales History');
+
+    // Sheet 2: Blank Template prefilled with next 14 days
+    const templateRows: any[] = [];
+    const latestDateStr = records[0]?.date || new Date().toISOString().slice(0, 10);
+    const startDate = new Date(latestDateStr);
+
+    for (let i = 1; i <= 14; i++) {
+      const nextDate = new Date(startDate);
+      nextDate.setDate(startDate.getDate() + i);
+      const dateStr = nextDate.toISOString().slice(0, 10);
+      templateRows.push(this.getEmptyExcelRow(dateStr, depts));
+    }
+    const wsTemplate = XLSX.utils.json_to_sheet(templateRows);
+    XLSX.utils.book_append_sheet(wb, wsTemplate, 'Fill Next Days Template');
+
+    const cleanBizName = (this.activeProfile.businessName || 'Compass').replace(/[^a-zA-Z0-9]/g, '_');
+    const today = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `${cleanBizName}_Daily_Sales_${today}.xlsx`);
+
+    this.saveSuccessMessage = this.lang.isSwahili()
+      ? 'Jedwali la Excel limepakuliwa! Unaweza kujaza siku mpya kisha kubofya Ingiza Excel.'
+      : 'Excel workbook exported! Fill the rest of the days in the template and click "Import Excel" to upload.';
+    this.cdr.detectChanges();
+  }
+
+  getEmptyExcelRow(dateStr: string, depts: string[]) {
+    const row: any = {
+      'Date': dateStr,
+      'Total Till': '',
+      'Total Cash': '',
+      'Total Sales': '',
+      'Total Expenses': '',
+      'Estimated Profit': '',
+    };
+    for (const dept of depts) {
+      row[`${dept} Till`] = '';
+      row[`${dept} Cash`] = '';
+      row[`${dept} Total`] = '';
+    }
+    row['Expenses Details'] = '';
+    row['Notes'] = '';
+    return row;
+  }
+
+  onExcelFileSelected(event: any) {
+    const file = event.target?.files?.[0];
+    if (!file) return;
+    this.excelFileName = file.name;
+    this.excelImportError = '';
+
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+
+        let targetSheetName = workbook.SheetNames[0];
+        // If there is a sheet named 'Fill Next Days Template' or 'Template' with filled data, prioritize it
+        for (const name of workbook.SheetNames) {
+          const sheet = workbook.Sheets[name];
+          const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+          if (rows.some((r: any) => r.Date || r.date || r.Tarehe || r['Total Sales'] || r['Total Till'])) {
+            targetSheetName = name;
+            break;
+          }
+        }
+
+        const worksheet = workbook.Sheets[targetSheetName];
+        const rawJson: any[] = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+        if (!rawJson || rawJson.length === 0) {
+          this.excelImportError = this.lang.isSwahili() ? 'Faili ya Excel haina data.' : 'Excel file contains no rows.';
+          this.cdr.detectChanges();
+          return;
+        }
+
+        this.parsedExcelDays = this.parseExcelRows(rawJson);
+        if (this.parsedExcelDays.length === 0) {
+          this.excelImportError = this.lang.isSwahili()
+            ? 'Hakuna siku zilizopatikana zenye tarehe na mauzo halali. Tafadhali hakikisha safu ya Date ina tarehe (mfano: 2026-11-18).'
+            : 'No rows with valid dates and sales found. Ensure the "Date" column is filled (e.g. 2026-11-18).';
+        }
+        this.cdr.detectChanges();
+      } catch (err: any) {
+        this.excelImportError = 'Error parsing Excel file: ' + (err.message || 'Invalid format');
+        this.cdr.detectChanges();
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  parseExcelRows(rawRows: any[]): any[] {
+    const parsed: any[] = [];
+    const activeDepts = this.getActiveDepartments();
+
+    for (const row of rawRows) {
+      let rawDate = row['Date'] || row['date'] || row['DATE'] || row['Tarehe'] || row['tarehe'] || row['Day'];
+      if (!rawDate) {
+        for (const k of Object.keys(row)) {
+          if (/date|tarehe|siku/i.test(k) || String(row[k]).includes('-') || String(row[k]).includes('/')) {
+            rawDate = row[k];
+            break;
+          }
+        }
+      }
+
+      if (!rawDate) continue;
+
+      let dateStr = '';
+      if (typeof rawDate === 'number') {
+        const d = new Date(Math.round((rawDate - 25569) * 86400 * 1000));
+        dateStr = d.toISOString().slice(0, 10);
+      } else {
+        const s = String(rawDate).trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+          dateStr = s;
+        } else {
+          const parts = s.split(/[-/.]/);
+          if (parts.length === 3) {
+            if (parts[2].length === 4) {
+              dateStr = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            } else if (parts[0].length === 4) {
+              dateStr = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+            }
+          }
+        }
+      }
+
+      if (!dateStr || dateStr.length < 8) continue;
+
+      const deptMap: Record<string, { till: number; cash: number; total: number }> = {};
+
+      for (const k of Object.keys(row)) {
+        const val = Number(row[k]) || 0;
+        if (val === 0 && !row[k]) continue;
+
+        const tillMatch = k.match(/^(.+?)\s*(Till|T)$/i);
+        if (tillMatch && !k.toLowerCase().includes('total till')) {
+          const dName = tillMatch[1].trim().toUpperCase();
+          if (!deptMap[dName]) deptMap[dName] = { till: 0, cash: 0, total: 0 };
+          deptMap[dName].till = val;
+          continue;
+        }
+
+        const cashMatch = k.match(/^(.+?)\s*(Cash|C)$/i);
+        if (cashMatch && !k.toLowerCase().includes('total cash')) {
+          const dName = cashMatch[1].trim().toUpperCase();
+          if (!deptMap[dName]) deptMap[dName] = { till: 0, cash: 0, total: 0 };
+          deptMap[dName].cash = val;
+          continue;
+        }
+
+        const totalMatch = k.match(/^(.+?)\s*(Total)$/i);
+        if (totalMatch && !k.toLowerCase().includes('total sales') && !k.toLowerCase().includes('total till') && !k.toLowerCase().includes('total cash') && !k.toLowerCase().includes('total expenses')) {
+          const dName = totalMatch[1].trim().toUpperCase();
+          if (!deptMap[dName]) deptMap[dName] = { till: 0, cash: 0, total: 0 };
+          deptMap[dName].total = val;
+          continue;
+        }
+      }
+
+      const departmentBreakdown: any[] = [];
+      for (const [dept, vals] of Object.entries(deptMap)) {
+        const tot = vals.total || (vals.till + vals.cash);
+        departmentBreakdown.push({
+          department: dept,
+          till: vals.till,
+          cash: vals.cash,
+          total: tot
+        });
+      }
+
+      let totalTill = Number(row['Total Till'] || row['tillTotal'] || row['Till'] || 0) || 0;
+      let totalCash = Number(row['Total Cash'] || row['cashTotal'] || row['Cash'] || 0) || 0;
+
+      if (totalTill === 0 && departmentBreakdown.length > 0) {
+        totalTill = departmentBreakdown.reduce((s, d) => s + (Number(d.till) || 0), 0);
+      }
+      if (totalCash === 0 && departmentBreakdown.length > 0) {
+        totalCash = departmentBreakdown.reduce((s, d) => s + (Number(d.cash) || 0), 0);
+      }
+
+      let totalSales = Number(row['Total Sales'] || row['sales'] || row['Mauzo'] || 0) || 0;
+      if (totalSales === 0) {
+        totalSales = totalTill + totalCash;
+      }
+      if (totalSales === 0 && departmentBreakdown.length > 0) {
+        totalSales = departmentBreakdown.reduce((s, d) => s + (Number(d.total) || 0), 0);
+      }
+
+      let totalExpenses = Number(row['Total Expenses'] || row['expenses'] || row['Expenses'] || row['Matumizi'] || 0) || 0;
+      const expenseBreakdown: any[] = [];
+
+      const expStr = String(row['Expenses Details'] || row['Expense Details'] || row['Matumizi Maelezo'] || '').trim();
+      if (expStr) {
+        const items = expStr.split(/[;,]/);
+        for (const item of items) {
+          const parts = item.split(/[:=]/);
+          if (parts.length >= 2) {
+            const cat = parts[0].trim();
+            const amt = Number(parts[1].trim()) || 0;
+            if (cat) expenseBreakdown.push({ category: cat, amount: amt });
+          } else {
+            const match = item.match(/^(.+?)\s+(\d+)$/);
+            if (match) {
+              expenseBreakdown.push({ category: match[1].trim(), amount: Number(match[2]) || 0 });
+            }
+          }
+        }
+      }
+
+      if (totalExpenses === 0 && expenseBreakdown.length > 0) {
+        totalExpenses = expenseBreakdown.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+      }
+
+      if (totalSales > 0 || totalExpenses > 0 || departmentBreakdown.length > 0) {
+        parsed.push({
+          date: dateStr,
+          sales: totalSales,
+          expenses: totalExpenses,
+          tillTotal: totalTill,
+          cashTotal: totalCash,
+          estimatedProfit: totalSales - totalExpenses,
+          departmentBreakdown,
+          expenseBreakdown,
+          notes: String(row['Notes'] || row['notes'] || row['Maelezo'] || '').trim()
+        });
+      }
+    }
+
+    parsed.sort((a: any, b: any) => b.date.localeCompare(a.date));
+    return parsed;
+  }
+
+  saveParsedExcelDays() {
+    if (!this.activeProfile || this.parsedExcelDays.length === 0) return;
+    this.excelImporting = true;
+    this.excelImportError = '';
+
+    this.api.recordBulkDailyTracking(this.activeProfile._id, this.parsedExcelDays).subscribe({
+      next: (res: any) => {
+        this.excelImporting = false;
+        this.showExcelImporter = false;
+        this.setActiveProfile(res);
+        const importedCount = this.parsedExcelDays.length;
+        this.saveSuccessMessage = this.lang.isSwahili()
+          ? `Siku ${importedCount} zimeingizwa na kuhifadhiwa kikamilifu kutoka Excel!`
+          : `Successfully imported and saved ${importedCount} days from Excel!`;
+        this.parsedExcelDays = [];
+        this.excelFileName = '';
+
+        this.triggerAiAnalysis(this.selectedAiTimeframe);
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        this.excelImporting = false;
+        this.excelImportError = err?.error?.message || 'Failed to save imported days to database.';
+        this.cdr.detectChanges();
       }
     });
   }
